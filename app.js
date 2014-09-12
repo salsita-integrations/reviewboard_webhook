@@ -1,13 +1,24 @@
+process.on('uncaughtException', function (err) {
+  console.error((new Date).toUTCString() + ' uncaughtException:', err.message)
+  console.error(err.stack)
+  process.exit(1)
+})
+
 var express = require('express');
 var path = require('path');
 var favicon = require('static-favicon');
 var logger = require('morgan');
 var cookieParser = require('cookie-parser');
 var bodyParser = require('body-parser');
+var _ = require('lodash');
 require('coffee-script/register');
+var debug = require('debug')('reviewboard:app');
 
+
+debug("requiring routes...")
 var routes = require('./routes/index');
-var users = require('./routes/users');
+debug("Routes required")
+
 
 var app = express();
 
@@ -23,7 +34,6 @@ app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use('/', routes);
-app.use('/users', users);
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -61,21 +71,33 @@ sa = require('superagent');
 tough = require('tough-cookie');
 var Cookie = tough.Cookie;
 
-sa
-  .get('https://' + process.env.RB_AUTH + '@' + process.env.RB_DOMAIN + '/api/review-requests/')
-  .end(function(err, res) {
-    if (err) {
-      return app.emit('app:error', err);
-    }
-    var cookies;
-    if (res.headers['set-cookie'] instanceof Array)
-      cookies = res.headers['set-cookie'].map(function (c) { return (Cookie.parse(c)); });
-    else
-      cookies = [Cookie.parse(res.headers['set-cookie'])];
-    rbsession = _.find(cookies, function(cookie) { return cookie.key == 'rbsessionid'; });
-    app.set('rbsessionid', rbsession.value);
-    app.emit('app:ready');
-  });
+
+setInterval(function() {
+  renewRbCookie();
+}, 1000 * 60 * 60 * 24 * 7); // Renew cookie every week (to be sure).
+
+renewRbCookie();
+
+function renewRbCookie() {
+  debug("renewing RB cookie...")
+  sa
+    .get('https://' + process.env.RB_AUTH + '@' + process.env.RB_DOMAIN + '/api/review-requests/')
+    .end(function(err, res) {
+      debug("renewing RB cookie -> RB response received", err, res.headers['set-cookie'])
+      if (err) {
+        return app.emit('app:error', err);
+      }
+      var cookies;
+      if (res.headers['set-cookie'] instanceof Array)
+        cookies = res.headers['set-cookie'].map(function (c) { return (Cookie.parse(c)); });
+      else
+        cookies = [Cookie.parse(res.headers['set-cookie'])];
+      rbsession = _.find(cookies, function(cookie) { return cookie.key == 'rbsessionid'; });
+      debug("Setting rbsessionid...")
+      app.set('rbsessionid', rbsession.value);
+      app.emit('app:ready');
+    });
+}
 
 
 module.exports = app;
