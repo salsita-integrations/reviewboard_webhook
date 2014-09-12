@@ -1,0 +1,16 @@
+#!/usr/bin/env node
+var debug = require('debug')('reviewboard');
+var app = require('../app');
+
+app.set('port', process.env.PORT || 3000);
+
+app.on('app:error', function(err) {
+  console.error('ERROR while starting app', err);
+});
+
+app.on('app:ready', function() {
+  var server = app.listen(app.get('port'), function() {
+    debug('Express server listening on port ' + server.address().port);
+  });
+
+});
