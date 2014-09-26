@@ -39,7 +39,8 @@ linkReviewRequest = (issueKey, rid) ->
 
 markReviewAsApproved = (issueKey, rid) ->
   Q.ninvoke(jira, 'getRemoteLinks', issueKey).then (links) ->
-    # Check whether this review request is already linked.
+    # Verify whether this review request has a coresponding remote link in
+    # JIRA.
     link = _.find links, ({object}) -> ~object.title.indexOf(rid)
     if not link
       console.warn("No linked review with id #{rid}.")
