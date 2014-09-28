@@ -11,6 +11,7 @@ jira = new JiraApi(
   '2')
 
 
+# Add a remote issue link to the JIRA issue.
 linkReviewRequest = (issueKey, rid) ->
   Q.ninvoke(jira, 'getRemoteLinks', issueKey).then (links) ->
     # Check whether this review request is already linked.
@@ -37,10 +38,14 @@ linkReviewRequest = (issueKey, rid) ->
     Q.reject err
 
 
+# Set the status of the correspoding remote issue issue link to `resolved`
+# (this will change the issue link to use striked font which looks nice and
+# adds to good UX).
 markReviewAsApproved = (issueKey, rid) ->
   Q.ninvoke(jira, 'getRemoteLinks', issueKey).then (links) ->
     # Verify whether this review request has a coresponding remote link in
     # JIRA.
+    # n QAQ
     link = _.find links, ({object}) -> ~object.title.indexOf(rid)
     if not link
       console.warn("No linked review with id #{rid}.")

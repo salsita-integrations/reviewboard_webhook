@@ -28,6 +28,7 @@ RB_WAIT_PERIOD_MS = config.services.reviewboard.waitInterval
 
 
 parseStoryId = (reviewRequest) ->
+  # Match GitFlow1 style branch.
   match = reviewRequest.branch.match /^.*\/([0-9]+)\/.*$/
   # Match story id in GitFlow 2 branch field.
   match or= reviewRequest.branch.match /^([0-9]+)$.*/
@@ -102,17 +103,18 @@ router.post '/rb/*', ensureReviewRequestPresent
 router.post '/rb/*', throttleRBRequests
 
 
-# Handle new review => if it's a 'ship-it', append a 'reviewed' label to the
-# corresponding PT story (determined by the `branch` field in review request).
+# Handle a newly published update to a review request (eiether approving or
+# non-approving).
+# If it's a `ship-it`, mark review as approved in the PM tool.
 router.post '/rb/review-published', (req, res) ->
+  # Reply right away (so that we don't block ReviewBoard).
   res.send 'ok'
 
-  debug('handling published review')
+  debug('Handling published review...')
 
   rr = req.reviewRequest
   payload = req.payload
 
-  debug('obtained payload', payload)
   debug("processing request (no wait list item for #{rr.id}")
 
   storyId = parseStoryId(rr)
@@ -138,7 +140,10 @@ router.post '/rb/review-published', (req, res) ->
     .done()
 
 
+# Handle a newly published review request.
+# Link the review request to the corresponding story in the PM tool.
 router.post '/rb/review-request-published', (req, res) ->
+  # Reply right away (so that we don't block ReviewBoard).
   res.send 'ok'
 
   rr = req.reviewRequest
@@ -161,6 +166,7 @@ router.post '/rb/review-request-published', (req, res) ->
     .linkReviewRequest(storyId, rr['id'], payload.new).done()
 
 
+# Get review request with id `rid` from ReviewBoard.
 getReviewRequest = (rbsessionid, rid) ->
   defer = Q.defer()
 
