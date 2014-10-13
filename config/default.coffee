@@ -17,3 +17,4 @@ module.exports =
       domain: process.env.RB_DOMAIN
       url: "https://#{process.env.RB_DOMAIN}"
       approvedLabel: 'reviewed'
+      waitInterval: 5000
