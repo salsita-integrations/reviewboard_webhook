@@ -3,7 +3,6 @@ module.exports =
     jira:
       host: "jira.salsitasoft.com"
       port: 443
-      user: "daemon"
 
     reviewboard:
       domain: "review.salsitasoft.com"

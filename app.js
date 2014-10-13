@@ -1,5 +1,6 @@
 process.on('uncaughtException', function (err) {
-  console.error((new Date).toUTCString() + ' uncaughtException:', err.message)
+  console.error((new Date).toUTCString() + ' uncaughtException:', 
+    JSON.stringify(err, null, 2))
   console.error(err.stack)
   process.exit(1)
 })

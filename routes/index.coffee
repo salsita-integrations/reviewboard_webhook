@@ -162,8 +162,14 @@ router.post '/rb/review-request-published', (req, res) ->
 
   debug("Linking issue #{rr.id} to story #{storyId}...")
 
-  issueTracker
-    .linkReviewRequest(storyId, rr['id'], payload.new).done()
+  issueTracker.linkReviewRequest(storyId, rr['id'], payload.new)
+    .then ->
+      console.log("Story #{storyId} review #{rr['id']} linked.")
+
+    .fail (err) ->
+      console.error("Failed to link review request", err)
+
+    .done()
 
 
 # Get review request with id `rid` from ReviewBoard.
