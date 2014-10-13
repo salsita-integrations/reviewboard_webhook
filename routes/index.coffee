@@ -82,7 +82,7 @@ ensureReviewRequestPresent = (req, res, next) ->
 throttleRBRequests = (req, res, next) ->
   rr = req.reviewRequest?
   if not rr?
-    res.send(500, 'missing review request')
+    return res.send(500, 'missing review request')
 
   if waitDict[rr.id]
     console.log "Review id #{rr.id} is in the wait list."
