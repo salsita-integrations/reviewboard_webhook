@@ -84,6 +84,8 @@ throttleRBRequests = (req, res, next) ->
   if not rr?
     return res.send(500, 'missing review request')
 
+  debug('throttling, rr ', rr, 'blocked')
+
   if waitDict[rr.id]
     console.log "Review id #{rr.id} is in the wait list."
     return res.send(429)
