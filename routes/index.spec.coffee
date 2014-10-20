@@ -30,7 +30,7 @@ describe "routes", ->
   app = express()
   app.use(bodyParser.urlencoded())
 
-  app.use '/', routes
+  app.use '/', routes.router
 
   describe "/rb/review-request-published", ->
 
@@ -65,7 +65,7 @@ describe "routes", ->
       it "links review request with a JIRA story", (done) ->
         nock("#{RB_URL}:443")
           .get("/api/review-requests/42/")
-          .reply(200, {review_request: {id: "1234", branch: "SF-1"}})
+          .reply(200, {review_request: {id: "1234", bugs_closed: ["SF-1"]}})
 
           rbReq.end (err, res) ->
             if err then throw err
@@ -78,7 +78,7 @@ describe "routes", ->
       it "links review request with a PT story", (done) ->
         nock("#{RB_URL}:443")
           .get("/api/review-requests/42/")
-          .reply(200, {review_request: {id: "1234", branch: "123456"}})
+          .reply(200, {review_request: {id: "1234", bugs_closed: ["123456"]}})
         
           rbReq.end (err, res) ->
             if err then throw err
@@ -87,3 +87,34 @@ describe "routes", ->
                 .should.have.been.called
               done()
             , 0
+
+
+describe "parseStoryId", ->
+
+  routes = require('./index')
+
+  it "returns story id for GitFlow-1-style review requests", ->
+    routes.parseStoryId({
+      branch: "feature/123456/human-readable-string"
+    }).should.equal("123456")
+
+  it "returns story id for superseded SalsaFlow-style review requests", ->
+    routes.parseStoryId({
+      branch: "TEST-1"
+    }).should.equal("TEST-1")
+
+  it "returns story id for new SalsaFlow-style review requests", ->
+    routes.parseStoryId({
+      bugs_closed: ['TEST-1']
+    }).should.equal("TEST-1")
+
+  it "returns `null` for review requests with no bugs and no branch", ->
+    (routes.parseStoryId({
+      bugs_closed: []
+      branch: ''
+    }) == null).should.be.true
+
+  it "returns `null` for review requests with multiple bugs", ->
+    (routes.parseStoryId({
+      bugs_closed: ['TEST-1', 'TEST-2']
+    }) == null).should.be.true

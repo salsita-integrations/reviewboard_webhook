@@ -6,6 +6,7 @@ app.set('port', process.env.PORT || 3000);
 
 app.on('app:error', function(err) {
   console.error('ERROR while starting app', err);
+  process.exit(1);
 });
 
 app.once('app:ready', function() {

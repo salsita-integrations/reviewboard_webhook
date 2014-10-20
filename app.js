@@ -15,11 +15,7 @@ var _ = require('lodash');
 require('coffee-script/register');
 var debug = require('debug')('reviewboard:app');
 
-
-debug("requiring routes...")
 var routes = require('./routes/index');
-debug("Routes required")
-
 
 var app = express();
 
@@ -34,7 +30,7 @@ app.use(bodyParser.urlencoded());
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-app.use('/', routes);
+app.use('/', routes.router);
 
 /// catch 404 and forward to error handler
 app.use(function(req, res, next) {
@@ -84,8 +80,8 @@ function renewRbCookie() {
   sa
     .get('https://' + process.env.RB_AUTH + '@' + process.env.RB_DOMAIN + '/api/review-requests/')
     .end(function(err, res) {
-      debug("renewing RB cookie -> RB response received", err, res.headers['set-cookie'])
       if (err) {
+        console.error("Could not get token from ReviewBoard", err)
         return app.emit('app:error', err);
       }
       var cookies;

@@ -27,17 +27,27 @@ RB_URL = config.services.reviewboard.url
 RB_WAIT_PERIOD_MS = config.services.reviewboard.waitInterval
 
 
-parseStoryId = (reviewRequest) ->
-  # Match GitFlow1 style branch.
-  match = reviewRequest.branch.match /^.*\/([0-9]+)\/.*$/
-  # Match story id in GitFlow 2 branch field.
-  match or= reviewRequest.branch.match /^([0-9]+)$.*/
-  # Match JIRA issue key.
-  match or= reviewRequest.branch.match /^(.+-.+)$.*/
-  if not match?
-    return null
+parseStoryId = ({bugs_closed, branch}) ->
+  if bugs_closed?.length == 1
+    # A single bug is linked, we assume it's issue ID set by SalsaFlow.
+    field = bugs_closed[0]
   else
-    return match[1]
+    # No bug or more bugs linked, we assume it's GitFlow 1.0.
+    field = branch
+
+  return null unless field
+
+  # Let's try to parse out the issue id.
+  match = null
+
+  # Match GitFlow1 style branch (e.g. "feature/123456/human-name").
+  match = field.match /^.*\/([^/]+)\/.*$/
+  if match then match = match[1]
+
+  # Otherwise just take the id.
+  match or= field
+
+  return match
 
 
 getIssueTrackerForStory = (storyId) ->
@@ -122,8 +132,7 @@ router.post '/rb/review-published', (req, res) ->
   debug("For story", storyId)
 
   if not storyId
-    console.error "ERROR: Could not determine story id from " +
-      "'branch' field: ", payload
+    console.error "ERROR: Could not determine story id"
     return res.send(400)
 
   issueTracker = getIssueTrackerForStory(storyId)
@@ -149,13 +158,11 @@ router.post '/rb/review-request-published', (req, res) ->
   rr = req.reviewRequest
   payload = req.payload
 
-  debug 'Review request branch field: ', rr.branch
   storyId = parseStoryId(rr)
   debug 'story id to update: ', storyId
 
   if not storyId?
-    console.error("ERROR: Could not determine story id from " +
-      "'branch' field: ", payload)
+    console.error("ERROR: Could not determine story id")
     return
 
   issueTracker = getIssueTrackerForStory(storyId)
@@ -196,7 +203,9 @@ getReviewRequest = (rbsessionid, rid) ->
   return defer.promise
 
 
-module.exports = router
-# Export this to allow testing.
-module.exports.issueTrackers = issueTrackers
+module.exports = {
+  router: router
+  issueTrackers: issueTrackers
+  parseStoryId: parseStoryId
+}
 
