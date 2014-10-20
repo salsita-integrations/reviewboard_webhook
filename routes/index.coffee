@@ -128,8 +128,8 @@ router.post '/rb/review-published', (req, res) ->
 
   issueTracker = getIssueTrackerForStory(storyId)
 
-  if not payload['ship_it']?
-    debug("No ship_it field found, ignoring the notification.")
+  if not payload['ship_it']
+    debug("ship_it field is falsy or undefined, ignoring the notification.")
     return
 
   issueTracker.markReviewAsApproved(storyId, rr['id'])
