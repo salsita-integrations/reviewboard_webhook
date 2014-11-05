@@ -96,7 +96,7 @@ throttleRBRequests = (req, res, next) ->
 
   if waitDict[rr.id]
     console.log "Review id #{rr.id} is in the wait list."
-    return res.send(429)
+    return res.send(202)
 
   waitDict[rr.id] = true
   setTimeout (-> delete waitDict[rr.id]), RB_WAIT_PERIOD_MS
