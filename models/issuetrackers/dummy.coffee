@@ -14,5 +14,7 @@ dummy = ->
 module.exports = {
   linkReviewRequest: dummy
   markReviewAsApproved: dummy
+  areAllReviewsApproved: -> Q(false)
+  transitionToReviewed: -> Q()
   id: 'dummy'
 }
