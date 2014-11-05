@@ -12,6 +12,9 @@ module.exports =
       port: process.env.JIRA_PORT or 80
       user: process.env.JIRA_USER
       password: process.env.JIRA_PASSWORD
+      transitions: {
+        to_reviewed: 341
+      }
 
     reviewboard:
       domain: process.env.RB_DOMAIN

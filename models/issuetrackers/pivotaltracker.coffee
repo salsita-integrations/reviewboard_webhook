@@ -6,6 +6,12 @@ pivotal = require("pivotal")
 pivotal.useToken(process.env.PT_TOKEN)
 
 
+# Dummy implementations.
+# TODO: Should we support PT too?
+areAllReviewsApproved = -> Q(false)
+transitionToReviewed = -> Q()
+
+
 markReviewAsApproved = (storyId, _rid) ->
   return addLabel(storyId, config.services.reviewboard.approvedLabel)
 
@@ -86,5 +92,7 @@ linkReviewRequest = (storyId, rid, isRequestNew) ->
 module.exports = {
   linkReviewRequest: linkReviewRequest
   markReviewAsApproved: markReviewAsApproved
+  areAllReviewsApproved: areAllReviewsApproved
+  transitionToReviewed: transitionToReviewed
   id: 'pivotaltracker'
 }

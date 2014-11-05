@@ -144,8 +144,13 @@ router.post '/rb/review-published', (req, res) ->
   issueTracker.markReviewAsApproved(storyId, rr['id'])
     .then ->
       console.log("Story #{storyId} marked as review approved.")
+    .then ->
+      issueTracker.areAllReviewsApproved(storyId).then (allApproved) ->
+        if allApproved
+          issueTracker.transitionToReviewed(storyId)
+          console.log("Story #{storyId} transitioned to \"reviewed\" state")
     .fail (err) ->
-      console.error("Failed to mark story #{storyId} as approved", err)
+      console.error("Failed to process story #{storyId}", err)
     .done()
 
 

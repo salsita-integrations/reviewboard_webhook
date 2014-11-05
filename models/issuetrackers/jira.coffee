@@ -11,6 +11,26 @@ jira = new JiraApi(
   '2')
 
 
+areAllReviewsApproved = (issueKey) ->
+  Q.ninvoke(jira, 'getRemoteLinks', issueKey)
+    .then (links) ->
+      # Developers are supposed to post review requests before they move the
+      # issue to "in review" so we assume 0 reviews means it's a "special"
+      # issue without reviews.
+      if links.length == 0 then return true
+      return _.all links, ({object}) -> object.status.resolved
+
+
+transitionToReviewed = (issueKey) ->
+  # Note: this expects JIRA to take care of verifying whether the issue is in
+  # the correct state (IOW we assume the "to-reviewed" transition is only
+  # carried out successfully when the issue is in the "implemented" state).
+  Q.ninvoke(jira, 'transitionIssue', issueKey, {
+    transition: {
+      id: config.services.jira.transitions.to_reviewed
+    }})
+
+
 # Add a remote issue link to the JIRA issue.
 linkReviewRequest = (issueKey, rid) ->
   Q.ninvoke(jira, 'getRemoteLinks', issueKey).then (links) ->
@@ -69,9 +89,10 @@ markReviewAsApproved = (issueKey, rid) ->
     Q.reject err
 
 
-
 module.exports = {
   linkReviewRequest: linkReviewRequest
   markReviewAsApproved: markReviewAsApproved
+  areAllReviewsApproved: areAllReviewsApproved
+  transitionToReviewed: transitionToReviewed
   id: 'jira'
 }
