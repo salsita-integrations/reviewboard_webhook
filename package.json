@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "start": "node ./bin/www",
-    "test": "NODE_ENV=test mocha **/*.coffee --compilers coffee:coffee-script/register"
+    "test": "NODE_ENV=test mocha --compilers coffee:coffee-script/register $(find . -name \"*.spec.coffee\" ! -path \"*node_modules*\")"
   },
   "dependencies": {
     "body-parser": "1.0.0",

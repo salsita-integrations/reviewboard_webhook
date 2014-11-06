@@ -5,25 +5,34 @@ _ = require('lodash')
 debug = require('debug')('reviewboard:route')
 
 
+transitionRules = config.services.jira.transitions
+
+
 jira = new JiraApi(
   'https', config.services.jira.host, config.services.jira.port,
   config.services.jira.user, config.services.jira.password,
   '2')
 
 
+
 areAllReviewsApproved = (issueKey) ->
-  Q.ninvoke(jira, 'getRemoteLinks', issueKey)
-    .then (links) -> _.all links, ({object}) -> object.status.resolved
+  Q.ninvoke(jira, 'getRemoteLinks', issueKey).then (links) ->
+    _.all links, ({object}) -> object.status.resolved
 
 
-transitionToReviewed = (issueKey) ->
-  # Note: this expects JIRA to take care of verifying whether the issue is in
-  # the correct state (IOW we assume the "to-reviewed" transition is only
-  # carried out successfully when the issue is in the "implemented" state).
-  Q.ninvoke(jira, 'transitionIssue', issueKey, {
-    transition: {
-      id: config.services.jira.transitions.to_reviewed
-    }})
+transitionToNextState = (issueKey) ->
+  Q.ninvoke(jira, 'findIssue', issueKey).then (issue) ->
+    typeid = issue.fields.issuetype.id
+    rule = transitionRules[typeid] or transitionRules['*']
+
+    if issue.fields.status.id != rule.required_state
+      throw new Error("Issue #{issueKey} is in invalid state " +
+        "#{issue.fields.status.name} (#{issue.fields.status.id}).")
+
+    return Q.ninvoke(jira, 'transitionIssue', issueKey, {
+      transition: {
+        id: rule.transition
+      }})
 
 
 # Add a remote issue link to the JIRA issue.
@@ -88,6 +97,6 @@ module.exports = {
   linkReviewRequest: linkReviewRequest
   markReviewAsApproved: markReviewAsApproved
   areAllReviewsApproved: areAllReviewsApproved
-  transitionToReviewed: transitionToReviewed
+  transitionToNextState: transitionToNextState
   id: 'jira'
 }

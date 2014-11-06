@@ -13,7 +13,12 @@ module.exports =
       user: process.env.JIRA_USER
       password: process.env.JIRA_PASSWORD
       transitions: {
-        to_reviewed: 341
+        10501: # coding subtask
+          required_state: "10401"
+          transition: "461"
+        '*': # all other types
+          required_state: "10401"
+          transition: "341"
       }
 
     reviewboard:

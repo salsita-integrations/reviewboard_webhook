@@ -9,7 +9,7 @@ pivotal.useToken(process.env.PT_TOKEN)
 # Dummy implementations.
 # TODO: Should we support PT too?
 areAllReviewsApproved = -> Q(false)
-transitionToReviewed = -> Q()
+transitionToNextState = -> Q()
 
 
 markReviewAsApproved = (storyId, _rid) ->
@@ -93,6 +93,6 @@ module.exports = {
   linkReviewRequest: linkReviewRequest
   markReviewAsApproved: markReviewAsApproved
   areAllReviewsApproved: areAllReviewsApproved
-  transitionToReviewed: transitionToReviewed
+  transitionToNextState: transitionToNextState
   id: 'pivotaltracker'
 }
