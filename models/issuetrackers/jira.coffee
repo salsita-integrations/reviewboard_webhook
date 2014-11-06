@@ -13,12 +13,7 @@ jira = new JiraApi(
 
 areAllReviewsApproved = (issueKey) ->
   Q.ninvoke(jira, 'getRemoteLinks', issueKey)
-    .then (links) ->
-      # Developers are supposed to post review requests before they move the
-      # issue to "in review" so we assume 0 reviews means it's a "special"
-      # issue without reviews.
-      if links.length == 0 then return true
-      return _.all links, ({object}) -> object.status.resolved
+    .then (links) -> _.all links, ({object}) -> object.status.resolved
 
 
 transitionToReviewed = (issueKey) ->
