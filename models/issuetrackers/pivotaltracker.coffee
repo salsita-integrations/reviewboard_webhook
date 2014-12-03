@@ -94,5 +94,6 @@ module.exports = {
   markReviewAsApproved: markReviewAsApproved
   areAllReviewsApproved: areAllReviewsApproved
   transitionToNextState: transitionToNextState
+  discardReviewRequest: -> debug("NOT IMPLEMENTED!") && Q()
   id: 'pivotaltracker'
 }

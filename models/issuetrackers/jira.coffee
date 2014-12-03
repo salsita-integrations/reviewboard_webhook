@@ -93,10 +93,27 @@ markReviewAsApproved = (issueKey, rid) ->
     Q.reject err
 
 
+discardReviewRequest = (issueKey, rid) ->
+  Q.ninvoke(jira, 'getRemoteLinks', issueKey).then (links) ->
+    # Verify whether this review request has a coresponding remote link in
+    # JIRA.
+    link = _.find links, ({object}) -> ~object.title.indexOf(rid)
+    if not link
+      console.warn("No linked review with id #{rid}.")
+      return
+
+    return Q.ninvoke(jira, 'deleteRemoteLink', issueKey, link.globalId)
+
+  .fail (err) ->
+    console.error "error", err
+    Q.reject err
+  
+
 module.exports = {
   linkReviewRequest: linkReviewRequest
   markReviewAsApproved: markReviewAsApproved
   areAllReviewsApproved: areAllReviewsApproved
   transitionToNextState: transitionToNextState
+  discardReviewRequest: discardReviewRequest
   id: 'jira'
 }

@@ -24,6 +24,7 @@ __jira = {
   getRemoteLinks: ->
   findIssue: ->
   transitionIssue: ->
+  deleteRemoteLink: ->
 }
 require('jira').JiraApi = -> __jira
 
@@ -77,3 +78,15 @@ describe "JIRA issue tracker", ->
       jira.transitionToNextState('TEST-1').then ->
         __jira.transitionIssue.should.have.been.calledWith(
           'TEST-1', {transition: id: rules[stateId].transition})
+
+  describe "discardReviewRequest", ->
+
+    it "deletes the linked remote issue", ->
+      links = [globalId: 'http://global.linked.issue.id', object: title: "r1234"]
+      _sb.stub(__jira, 'getRemoteLinks').yields(null, links)
+      _sb.stub(__jira, 'deleteRemoteLink').yields(null, {})
+      
+      jira.discardReviewRequest('SF-1', '1234')
+        .then ->
+          __jira.deleteRemoteLink.should.have.been.calledWith(
+            'SF-1', 'http://global.linked.issue.id')

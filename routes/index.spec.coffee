@@ -89,32 +89,41 @@ describe "routes", ->
             , 0
 
 
-describe "parseStoryId", ->
+  describe "/rb/review-request-closed", ->
 
-  routes = require('./index')
+    afterEach ->
+      nock.cleanAll()
 
-  it "returns story id for GitFlow-1-style review requests", ->
-    routes.parseStoryId({
-      branch: "feature/123456/human-readable-string"
-    }).should.equal("123456")
+    describe "when a POST request is received", ->
 
-  it "returns story id for superseded SalsaFlow-style review requests", ->
-    routes.parseStoryId({
-      branch: "TEST-1"
-    }).should.equal("TEST-1")
+      payload = null
+      rbReq = null
 
-  it "returns story id for new SalsaFlow-style review requests", ->
-    routes.parseStoryId({
-      bugs_closed: ['TEST-1']
-    }).should.equal("TEST-1")
+      beforeEach ->
+        payload = JSON.stringify({
+          review_request_id: 42
+          type: 'D'
+        })
 
-  it "returns `null` for review requests with no bugs and no branch", ->
-    (routes.parseStoryId({
-      bugs_closed: []
-      branch: ''
-    }) == null).should.be.true
+        rbReq = request(app)
+          .post('/rb/review-request-closed')
+          .type("form")
+          .send("payload=#{payload}")
 
-  it "returns `null` for review requests with multiple bugs", ->
-    (routes.parseStoryId({
-      bugs_closed: ['TEST-1', 'TEST-2']
-    }) == null).should.be.true
+        # Stub out the discarding logic (is tested in the RB module).
+        for id, tracker of routes.issueTrackers
+          _sb.stub(tracker, 'discardReviewRequest').returns Q()
+
+      it "calls the discardReviewRequest method on RB model", (done) ->
+        nock("#{RB_URL}:443")
+          .get("/api/review-requests/42/")
+          .reply(200, {review_request: {id: "1234", bugs_closed: ["SF-1"]}})
+
+          rbReq.end (err, res) ->
+            if err then throw err
+            setTimeout ->
+              routes.issueTrackers.jira.discardReviewRequest
+                .should.have.been.calledWith('SF-1', "1234")
+              done()
+            , 100
+      

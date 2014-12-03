@@ -5,6 +5,7 @@ _ = require('lodash')
 Q = require('q')
 debug = require('debug')('reviewboard')
 config = require('config')
+rb = require('../reviewboard')
 
 issueTrackers = _.zipObject _.map config.trackers, (tracker) ->
   [tracker, require("./../models/issuetrackers/#{tracker}")]
@@ -16,38 +17,6 @@ debug("Supported issue trackers: ", _.keys issueTrackers)
 if process.env.NODE_ENV != 'production'
   # Long stack traces for Q.
   Q.longStackSupport = true
-
-
-# ReviewBoard is sending 4 requests at the same time. Keep a wait list to
-# prevent duplicite updates.
-waitDict = {}
-
-
-RB_URL = config.services.reviewboard.url
-RB_WAIT_PERIOD_MS = config.services.reviewboard.waitInterval
-
-
-parseStoryId = ({bugs_closed, branch}) ->
-  if bugs_closed?.length == 1
-    # A single bug is linked, we assume it's issue ID set by SalsaFlow.
-    field = bugs_closed[0]
-  else
-    # No bug or more bugs linked, we assume it's GitFlow 1.0.
-    field = branch
-
-  return null unless field
-
-  # Let's try to parse out the issue id.
-  match = null
-
-  # Match GitFlow1 style branch (e.g. "feature/123456/human-name").
-  match = field.match /^.*\/([^/]+)\/.*$/
-  if match then match = match[1]
-
-  # Otherwise just take the id.
-  match or= field
-
-  return match
 
 
 getIssueTrackerForStory = (storyId) ->
@@ -62,55 +31,13 @@ getIssueTrackerForStory = (storyId) ->
   return tracker
 
 
-  # Middleware.
-ensureReviewRequestPresent = (req, res, next) ->
-  if not req.body?.payload?
-    return res.send(422, "missing 'payload' field")
-
-  payload = JSON.parse(req.body.payload)
-  req.payload = payload
-
-  rid = payload.review_request_id
-
-  if not rid?
-    console.error "error: Required parameter missing: review_request_id"
-    return res.send(422)
-
-  rbsessionid = req.app.get('rbsessionid')
-
-  getReviewRequest(rbsessionid, rid)
-    .then (rr) ->
-      req.reviewRequest = rr
-      next()
-    .fail (err) ->
-      console.error JSON.stringify(err)
-      next(err)
-    .done()
-
-
-# Middleware.
-throttleRBRequests = (req, res, next) ->
-  rr = req.reviewRequest
-  if not rr?
-    return res.send(500, 'missing review request')
-
-  if waitDict[rr.id]
-    console.log "Review id #{rr.id} is in the wait list."
-    return res.send(202)
-
-  waitDict[rr.id] = true
-  setTimeout (-> delete waitDict[rr.id]), RB_WAIT_PERIOD_MS
-
-  next()
-
-
 router.get '/', (req, res) ->
   res.send "Move on, nothing to see here."
 
 
 # RB related middlewares.
-router.post '/rb/*', ensureReviewRequestPresent
-router.post '/rb/*', throttleRBRequests
+router.post '/rb/*', rb.middleware.ensureReviewRequestPresent
+router.post '/rb/*', rb.middleware.throttleRBRequests
 
 
 # Handle a newly published update to a review request (eiether approving or
@@ -127,7 +54,7 @@ router.post '/rb/review-published', (req, res) ->
 
   debug("processing request (no wait list item for #{rr.id}")
 
-  storyId = parseStoryId(rr)
+  storyId = rb.parseStoryId(rr)
 
   debug("For story", storyId)
 
@@ -163,7 +90,7 @@ router.post '/rb/review-request-published', (req, res) ->
   rr = req.reviewRequest
   payload = req.payload
 
-  storyId = parseStoryId(rr)
+  storyId = rb.parseStoryId(rr)
   debug 'story id to update: ', storyId
 
   if not storyId?
@@ -183,34 +110,45 @@ router.post '/rb/review-request-published', (req, res) ->
 
     .done()
 
+router.post '/rb/review-request-closed', (req, res) ->
+  # Reply right away (so that we don't block ReviewBoard).
+  res.send 'ok'
 
-# Get review request with id `rid` from ReviewBoard.
-getReviewRequest = (rbsessionid, rid) ->
-  defer = Q.defer()
+  rr = req.reviewRequest
+  payload = req.payload
 
-  options = {
-    method: 'GET'
-    url: "#{RB_URL}/api/review-requests/#{rid}/"
-    json: true
-    headers:
-      Cookie: "rbsessionid=#{rbsessionid}"
-  }
-  request options, (err, res, body) ->
-    if err
-      debug("getReviewRequest err", err)
-      return defer.reject(err)
-    if res.statusCode != 200
-      debug("getReviewRequest failed to get", body)
-      return defer.reject new Error(body)
+  storyId = rb.parseStoryId(rr)
+  debug 'story id to update: ', storyId
 
-    defer.resolve body.review_request
+  if not storyId?
+    console.error("ERROR: Could not determine story id")
+    return
 
-  return defer.promise
+  if payload.type != 'D'
+    debug("Ignoring review request close event for #{rr['id']} (type is not \"discarded\")")
+    return
+
+  issueTracker = getIssueTrackerForStory(storyId)
+
+  debug("Closing linked issue #{rr.id} at story #{storyId}...")
+
+  issueTracker.discardReviewRequest(storyId, rr['id'])
+    .then ->
+      console.log("Story #{storyId} review #{rr['id']} linked.")
+
+    .fail (err) ->
+      console.error("Failed to link review request", err)
+
+    .done()
+  
+  
+  
+  
+
 
 
 module.exports = {
   router: router
   issueTrackers: issueTrackers
-  parseStoryId: parseStoryId
 }
 
