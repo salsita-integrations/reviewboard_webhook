@@ -134,7 +134,7 @@ router.post '/rb/review-request-closed', (req, res) ->
 
   issueTracker.discardReviewRequest(storyId, rr['id'])
     .then ->
-      console.log("Story #{storyId} review #{rr['id']} linked.")
+      console.log("Story #{storyId} review #{rr['id']} discarded.")
 
     .fail (err) ->
       console.error("Failed to link review request", err)
