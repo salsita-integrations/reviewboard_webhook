@@ -85,7 +85,7 @@ describe "JIRA issue tracker", ->
       links = [globalId: 'http://global.linked.issue.id', object: title: "r1234"]
       _sb.stub(__jira, 'getRemoteLinks').yields(null, links)
       _sb.stub(__jira, 'deleteRemoteLink').yields(null, {})
-      
+
       jira.discardReviewRequest('SF-1', '1234')
         .then ->
           __jira.deleteRemoteLink.should.have.been.calledWith(

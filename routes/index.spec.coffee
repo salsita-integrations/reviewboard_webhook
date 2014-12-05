@@ -79,7 +79,7 @@ describe "routes", ->
         nock("#{RB_URL}:443")
           .get("/api/review-requests/42/")
           .reply(200, {review_request: {id: "1234", bugs_closed: ["123456"]}})
-        
+
           rbReq.end (err, res) ->
             if err then throw err
             setTimeout ->
@@ -126,4 +126,3 @@ describe "routes", ->
                 .should.have.been.calledWith('SF-1', "1234")
               done()
             , 100
-      

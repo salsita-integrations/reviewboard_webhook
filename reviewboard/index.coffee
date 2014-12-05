@@ -83,9 +83,10 @@ parseStoryId = ({bugs_closed, branch}) ->
   if bugs_closed?.length == 1
     # A single bug is linked, we assume it's issue ID set by SalsaFlow.
     field = bugs_closed[0]
-  else
-    # No bug or more bugs linked, we assume it's GitFlow 1.0.
-    field = branch
+    return field
+
+  # No bug or more bugs linked, we assume it's GitFlow 1.0.
+  field = branch
 
   return null unless field
 

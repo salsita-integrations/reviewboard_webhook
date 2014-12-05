@@ -140,11 +140,6 @@ router.post '/rb/review-request-closed', (req, res) ->
       console.error("Failed to link review request", err)
 
     .done()
-  
-  
-  
-  
-
 
 
 module.exports = {

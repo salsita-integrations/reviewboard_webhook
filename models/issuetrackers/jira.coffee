@@ -107,7 +107,7 @@ discardReviewRequest = (issueKey, rid) ->
   .fail (err) ->
     console.error "error", err
     Q.reject err
-  
+
 
 module.exports = {
   linkReviewRequest: linkReviewRequest
