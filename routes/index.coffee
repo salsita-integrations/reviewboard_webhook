@@ -22,7 +22,7 @@ if process.env.NODE_ENV != 'production'
 getIssueTrackerForStory = (storyId) ->
   debug("Determining issue tracker for story #{storyId}")
   tracker = null
-  if storyId.match(/^[0-9]+$/)
+  if storyId.match(/^[0-9]+\/stories\/[0-9]+$/)
     tracker = issueTrackers.pivotaltracker
   else if storyId.match(/^.+-.+$/)
     tracker = issueTrackers.jira
