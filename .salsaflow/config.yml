@@ -1,7 +1,8 @@
-code_review_tool: "review_board"
-review_board:
-  server_url: "https://review.salsitasoft.com" 
 issue_tracker: "jira"
 jira:
-  project_key: "SF"
   server_url: "https://jira.salsitasoft.com"
+  project_key: "SF"
+
+code_review_tool: "review_board"
+review_board:
+  server_url: "https://review.salsitasoft.com"
