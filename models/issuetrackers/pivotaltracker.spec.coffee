@@ -90,9 +90,9 @@ review 45678 is pending [link](https://review.salsitasoft.com/r/45678)
 Just implement this and that.
 
 ----- Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/23456)
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
 review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
-review 34567 is pending [link](https://review.salsitasoft.com/r/23456)
+review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
 ----------------------------------------
 """
       }
@@ -151,9 +151,9 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
 Just implement this and that.
 
 ----- Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/23456)
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
 review 23456 is pending [link](https://review.salsitasoft.com/r/23456)
-review 34567 is approved [link](https://review.salsitasoft.com/r/23456)
+review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
 ----------------------------------------
 """
       }
@@ -163,9 +163,9 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/23456)
 Just implement this and that.
 
 ----- Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/23456)
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
 review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
-review 34567 is approved [link](https://review.salsitasoft.com/r/23456)
+review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
 ----------------------------------------
 """
       }
@@ -253,9 +253,9 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/23456)
 Just implement this and that.
 
 ----- Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/23456)
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
 review 23456 is pending [link](https://review.salsitasoft.com/r/23456)
-review 34567 is pending [link](https://review.salsitasoft.com/r/23456)
+review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
 ----------------------------------------
 """
       }
@@ -265,8 +265,8 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/23456)
 Just implement this and that.
 
 ----- Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/23456)
-review 34567 is pending [link](https://review.salsitasoft.com/r/23456)
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
+review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
 ----------------------------------------
 """
       }
