@@ -38,7 +38,7 @@ describe "Pivotal Tracker issue tracker", ->
         description: story.description + '\n\
 \n\
 ----- Review Board Review Requests -----\n\
-review 12345 is pending\n\
+review 12345 is pending [link](https://review.salsitasoft.com/r/12345)\n\
 ----------------------------------------'
       }
 
@@ -55,9 +55,9 @@ review 12345 is pending\n\
         description: 'Just implement this and that.\n\
 \n\
 ----- Review Board Review Requests -----\n\
-review 12345 is approved\n\
-review 23456 is approved\n\
-review 34567 is approved\n\
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)\n\
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
+review 34567 is approved [link](https://review.salsitasoft.com/r/34567)\n\
 ----------------------------------------'
       }
 
@@ -65,10 +65,10 @@ review 34567 is approved\n\
         description: 'Just implement this and that.\n\
 \n\
 ----- Review Board Review Requests -----\n\
-review 12345 is approved\n\
-review 23456 is approved\n\
-review 34567 is approved\n\
-review 45678 is pending\n\
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)\n\
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
+review 34567 is approved [link](https://review.salsitasoft.com/r/34567)\n\
+review 45678 is pending [link](https://review.salsitasoft.com/r/45678)\n\
 ----------------------------------------'
       }
 
@@ -83,9 +83,9 @@ review 45678 is pending\n\
         description: 'Just implement this and that.\n\
 \n\
 ----- Review Board Review Requests -----\n\
-review 12345 is approved\n\
-review 23456 is approved\n\
-review 34567 is pending\n\
+review 12345 is approved [link](https://review.salsitasoft.com/r/23456)\n\
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
+review 34567 is pending [link](https://review.salsitasoft.com/r/23456)\n\
 ----------------------------------------'
       }
 
@@ -103,9 +103,9 @@ review 34567 is pending\n\
         description: 'Just implement this and that\n\
 \n\
 ----- Review Board Review Requests -----\n\
-review 12345 is approved\n\
-review 23456 is approved\n\
-review 34567 is approved\n\
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)\n\
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
+review 34567 is approved [link](https://review.salsitasoft.com/r/34567)\n\
 ----------------------------------------'
       }
 
@@ -118,9 +118,9 @@ review 34567 is approved\n\
         description: 'Just implement this and that\n\
 \n\
 ----- Review Board Review Requests -----\n\
-review 12345 is approved\n\
-review 23456 is approved\n\
-review 34567 is pending\n\
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)\n\
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
+review 34567 is pending [link](https://review.salsitasoft.com/r/34567)\n\
 ----------------------------------------'
       }
 
@@ -138,9 +138,9 @@ review 34567 is pending\n\
         description: 'Just implement this and that\n\
 \n\
 ----- Review Board Review Requests -----\n\
-review 12345 is approved\n\
-review 23456 is pending\n\
-review 34567 is approved\n\
+review 12345 is approved [link](https://review.salsitasoft.com/r/23456)\n\
+review 23456 is pending [link](https://review.salsitasoft.com/r/23456)\n\
+review 34567 is approved [link](https://review.salsitasoft.com/r/23456)\n\
 ----------------------------------------'
       }
 
@@ -148,9 +148,9 @@ review 34567 is approved\n\
         description: 'Just implement this and that\n\
 \n\
 ----- Review Board Review Requests -----\n\
-review 12345 is approved\n\
-review 23456 is approved\n\
-review 34567 is approved\n\
+review 12345 is approved [link](https://review.salsitasoft.com/r/23456)\n\
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
+review 34567 is approved [link](https://review.salsitasoft.com/r/23456)\n\
 ----------------------------------------'
       }
 
@@ -236,9 +236,9 @@ review 34567 is approved\n\
         description: 'Just implement this and that.\n\
 \n\
 ----- Review Board Review Requests -----\n\
-review 12345 is approved\n\
-review 23456 is pending\n\
-review 34567 is pending\n\
+review 12345 is approved [link](https://review.salsitasoft.com/r/23456)\n\
+review 23456 is pending [link](https://review.salsitasoft.com/r/23456)\n\
+review 34567 is pending [link](https://review.salsitasoft.com/r/23456)\n\
 ----------------------------------------'
       }
 
@@ -246,8 +246,8 @@ review 34567 is pending\n\
         description: 'Just implement this and that.\n\
 \n\
 ----- Review Board Review Requests -----\n\
-review 12345 is approved\n\
-review 34567 is pending\n\
+review 12345 is approved [link](https://review.salsitasoft.com/r/23456)\n\
+review 34567 is pending [link](https://review.salsitasoft.com/r/23456)\n\
 ----------------------------------------'
       }
 
