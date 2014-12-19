@@ -35,11 +35,13 @@ describe "Pivotal Tracker issue tracker", ->
       }
 
       update = {
-        description: story.description + '\n\
-\n\
------ Review Board Review Requests -----\n\
-review 12345 is pending [link](https://review.salsitasoft.com/r/12345)\n\
-----------------------------------------'
+        description: """
+Just implement this and that.
+
+----- Review Board Review Requests -----
+review 12345 is pending [link](https://review.salsitasoft.com/r/12345)
+----------------------------------------
+"""
       }
 
       _client.getStory.returns(Q(story))
@@ -52,24 +54,28 @@ review 12345 is pending [link](https://review.salsitasoft.com/r/12345)\n\
       story = {
         id: 1
         project_id: 1
-        description: 'Just implement this and that.\n\
-\n\
------ Review Board Review Requests -----\n\
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)\n\
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-review 34567 is approved [link](https://review.salsitasoft.com/r/34567)\n\
-----------------------------------------'
+        description: """
+Just implement this and that.
+
+----- Review Board Review Requests -----
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
+review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
+----------------------------------------
+"""
       }
 
       update = {
-        description: 'Just implement this and that.\n\
-\n\
------ Review Board Review Requests -----\n\
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)\n\
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-review 34567 is approved [link](https://review.salsitasoft.com/r/34567)\n\
-review 45678 is pending [link](https://review.salsitasoft.com/r/45678)\n\
-----------------------------------------'
+        description: """
+Just implement this and that.
+
+----- Review Board Review Requests -----
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
+review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
+review 45678 is pending [link](https://review.salsitasoft.com/r/45678)
+----------------------------------------
+"""
       }
 
       _client.getStory.returns(Q(story))
@@ -80,13 +86,15 @@ review 45678 is pending [link](https://review.salsitasoft.com/r/45678)\n\
 
     it "does not do anything when the link is already there", ->
       story = {
-        description: 'Just implement this and that.\n\
-\n\
------ Review Board Review Requests -----\n\
-review 12345 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-review 34567 is pending [link](https://review.salsitasoft.com/r/23456)\n\
-----------------------------------------'
+        description: """
+Just implement this and that.
+
+----- Review Board Review Requests -----
+review 12345 is approved [link](https://review.salsitasoft.com/r/23456)
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
+review 34567 is pending [link](https://review.salsitasoft.com/r/23456)
+----------------------------------------
+"""
       }
 
       _client.getStory.returns(Q(story))
@@ -100,13 +108,15 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/23456)\n\
 
     it "returns true when all linked remote review requests are approved", ->
       story = {
-        description: 'Just implement this and that\n\
-\n\
------ Review Board Review Requests -----\n\
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)\n\
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-review 34567 is approved [link](https://review.salsitasoft.com/r/34567)\n\
-----------------------------------------'
+        description: """
+Just implement this and that.
+
+----- Review Board Review Requests -----
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
+review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
+----------------------------------------
+"""
       }
 
       _client.getStory.returns(Q(story))
@@ -115,13 +125,15 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)\n\
 
     it "returns false when any linked remote review requests is not approved", ->
       story = {
-        description: 'Just implement this and that\n\
-\n\
------ Review Board Review Requests -----\n\
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)\n\
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-review 34567 is pending [link](https://review.salsitasoft.com/r/34567)\n\
-----------------------------------------'
+        description: """
+Just implement this and that.
+
+----- Review Board Review Requests -----
+review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
+review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
+----------------------------------------
+"""
       }
 
       _client.getStory.returns(Q(story))
@@ -135,23 +147,27 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)\n\
       story = {
         id: 1
         project_id: 1
-        description: 'Just implement this and that\n\
-\n\
------ Review Board Review Requests -----\n\
-review 12345 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-review 23456 is pending [link](https://review.salsitasoft.com/r/23456)\n\
-review 34567 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-----------------------------------------'
+        description: """
+Just implement this and that.
+
+----- Review Board Review Requests -----
+review 12345 is approved [link](https://review.salsitasoft.com/r/23456)
+review 23456 is pending [link](https://review.salsitasoft.com/r/23456)
+review 34567 is approved [link](https://review.salsitasoft.com/r/23456)
+----------------------------------------
+"""
       }
 
       update = {
-        description: 'Just implement this and that\n\
-\n\
------ Review Board Review Requests -----\n\
-review 12345 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-review 34567 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-----------------------------------------'
+        description: """
+Just implement this and that.
+
+----- Review Board Review Requests -----
+review 12345 is approved [link](https://review.salsitasoft.com/r/23456)
+review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
+review 34567 is approved [link](https://review.salsitasoft.com/r/23456)
+----------------------------------------
+"""
       }
 
       _client.getStory.returns(Q(story))
@@ -233,22 +249,26 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/23456)\n\
       story = {
         id: 1
         project_id: 1
-        description: 'Just implement this and that.\n\
-\n\
------ Review Board Review Requests -----\n\
-review 12345 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-review 23456 is pending [link](https://review.salsitasoft.com/r/23456)\n\
-review 34567 is pending [link](https://review.salsitasoft.com/r/23456)\n\
-----------------------------------------'
+        description: """
+Just implement this and that.
+
+----- Review Board Review Requests -----
+review 12345 is approved [link](https://review.salsitasoft.com/r/23456)
+review 23456 is pending [link](https://review.salsitasoft.com/r/23456)
+review 34567 is pending [link](https://review.salsitasoft.com/r/23456)
+----------------------------------------
+"""
       }
 
       update = {
-        description: 'Just implement this and that.\n\
-\n\
------ Review Board Review Requests -----\n\
-review 12345 is approved [link](https://review.salsitasoft.com/r/23456)\n\
-review 34567 is pending [link](https://review.salsitasoft.com/r/23456)\n\
-----------------------------------------'
+        description: """
+Just implement this and that.
+
+----- Review Board Review Requests -----
+review 12345 is approved [link](https://review.salsitasoft.com/r/23456)
+review 34567 is pending [link](https://review.salsitasoft.com/r/23456)
+----------------------------------------
+"""
       }
 
       _client.getStory.returns(Q(story))
