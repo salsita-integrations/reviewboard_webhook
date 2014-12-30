@@ -6,6 +6,7 @@ debug = require('debug')('pivotaltracker')
 config = require('config')
 pt = require("pivotaltracker")
 
+implementedLabel = config.services.pivotaltracker.implementedLabel
 reviewedLabel = config.services.reviewboard.approvedLabel
 passedLabel = config.services.pivotaltracker.testingPassedLabel
 failedLabel = config.services.pivotaltracker.testingFailedLabel
@@ -147,6 +148,11 @@ areAllReviewsApproved = (storyIdTag) ->
   client.getStory(args.pid, args.sid)
     .then (story) ->
       debug('areAllReviewsApproved -> got the story object')
+
+      # The story must be labeled with 'implemented' to ever return true.
+      if not ~story.labels.indexOf(implementedLabel)
+        return false
+
       lines = story.description.split('\n')
 
       begin = lines.indexOf(linksSeparatorBegin)

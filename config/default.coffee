@@ -28,5 +28,6 @@ module.exports =
       waitInterval: 5000
 
     pivotaltracker:
+      implementedLabel: 'implemented'
       testingPassedLabel: 'qa+'
       testingFailedLabel: 'qa-'

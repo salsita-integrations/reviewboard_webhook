@@ -11,6 +11,7 @@ _ = require('lodash')
 
 config = require('config')
 
+implementedLabel = config.services.pivotaltracker.implementedLabel
 reviewedLabel = config.services.reviewboard.approvedLabel
 passedLabel = config.services.pivotaltracker.testingPassedLabel
 failedLabel = config.services.pivotaltracker.testingFailedLabel
@@ -112,6 +113,7 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
 
     it "returns true when all linked remote review requests are approved", ->
       story = {
+        labels: [implementedLabel]
         description: """
 Just implement this and that.
 
@@ -129,6 +131,7 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
 
     it "returns false when any linked remote review requests is not approved", ->
       story = {
+        labels: [implementedLabel]
         description: """
 Just implement this and that.
 
@@ -144,6 +147,14 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
 
       pt.areAllReviewsApproved('1/stories/1').should.eventually.be.false
 
+  it "returns false when the story is not marked as implemented", ->
+    story = {
+        labels: ['some random label']
+    }
+
+    _client.getStory.returns(Q(story))
+
+    pt.areAllReviewsApproved('1/stories/1').should.eventually.be.false
 
   describe "markReviewAsApproved", ->
 
