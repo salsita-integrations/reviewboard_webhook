@@ -176,13 +176,24 @@ transitionToNextState = (storyIdTag) ->
       debug('transitionToNextState -> got the story object')
       switch story.current_state
         when 'started'
-          # Look for the reviewed label. In case it is not there, we add it.
-          # That signals that the story is ready to be tested.
+          # This function is only called when the story is fully reviewed.
+          # The task here is to drop the 'implemented' label and add 'reviewed'.
+          # This transitions the story from Implemented to Reviewed.
+
+          # First, make sure the 'reviewed' label is not there yet.
+          # In that case there is nothing to do and we return.
           alreadyThere = story.labels.some (label) -> label.name is reviewedLabel
           if alreadyThere
             return
-          labels = story.labels.map (label) -> {id: label.id}
+
+          # Drop the 'implemented' label.
+          filteredLabels = story.labels.filter (label) -> label.name isnt implementedLabel
+
+          # Add the 'reviewed' label.
+          labels = filteredLabels.map (label) -> {id: label.id}
           labels.push({name: reviewedLabel})
+
+          # Update the story.
           client.updateStory(story.project_id, story.id, {labels: labels})
         when 'finished'
           client.updateStory(story.project_id, story.id, {current_state: 'delivered'})

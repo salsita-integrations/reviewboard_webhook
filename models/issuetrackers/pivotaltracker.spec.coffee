@@ -194,7 +194,7 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
 
   describe "transitionToNextState", ->
 
-    it "adds the 'reviewed' label for a story that is started", ->
+    it "adds the 'reviewed' label for a story that is approved", ->
       story = {
         id: 1
         project_id: 1
@@ -220,6 +220,35 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
 
       pt.transitionToNextState('1/stories/1').then ->
         _client.updateStory.should.have.been.calledWith(1, 1, update)
+
+    it "drops the 'implemented' label for a story that is approved", ->
+      story = {
+        id: 1
+        project_id: 1
+        current_state: 'started'
+        labels: [
+          {id: 1}
+          {id: 2}
+          {id: 3}
+          {name: implementedLabel}
+        ]
+      }
+
+      update = {
+        labels: [
+          {id: 1}
+          {id: 2}
+          {id: 3}
+          {name: reviewedLabel}
+        ]
+      }
+
+      _client.getStory.returns(Q(story))
+      _client.updateStory.returns(Q())
+
+      pt.transitionToNextState('1/stories/1').then ->
+        _client.updateStory.should.have.been.calledWith(1, 1, update)
+
 
     it "does not add the 'reviewed' label when it is already there", ->
       story = {
