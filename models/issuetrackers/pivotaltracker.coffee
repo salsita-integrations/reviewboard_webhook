@@ -1,9 +1,14 @@
 Q = require('q')
+EventEmitter = require('events').EventEmitter
 request = require('request')
 _ = require('lodash')
 debug = require('debug')('pivotaltracker')
 config = require('config')
 pt = require("pivotaltracker")
+
+reviewedLabel = config.services.reviewboard.approvedLabel
+passedLabel = config.services.pivotaltracker.testingPassedLabel
+failedLabel = config.services.pivotaltracker.testingFailedLabel
 
 #
 # The global client implementation that is being used by the functions in this module.
@@ -167,11 +172,11 @@ transitionToNextState = (storyIdTag) ->
         when 'started'
           # Look for the reviewed label. In case it is not there, we add it.
           # That signals that the story is ready to be tested.
-          alreadyThere = story.labels.some (label) -> label.name is 'reviewed'
+          alreadyThere = story.labels.some (label) -> label.name is reviewedLabel
           if alreadyThere
             return
           labels = story.labels.map (label) -> {id: label.id}
-          labels.push({name: 'reviewed'})
+          labels.push({name: reviewedLabel})
           client.updateStory(story.project_id, story.id, {labels: labels})
         when 'finished'
           client.updateStory(story.project_id, story.id, {current_state: 'delivered'})
@@ -222,13 +227,89 @@ parseStoryIdTag = (storyIdTag) ->
 link = (rrid, state) ->
   "review #{rrid} is #{state} [link](#{config.services.reviewboard.url}/r/#{rrid})"
 
+##
+## Pivotal Tracker Activity Hooks
+##
+
+activity = new EventEmitter()
+
+activity.on 'labels', (event) ->
+  tryPassTesting event
+    .fail (err) ->
+      console.error('failed to update Pivotal Tracker story:', err)
+    .done()
+
+activity.on 'labels', (event) ->
+  tryFailTesting event
+    .fail (err) ->
+      console.error('failed to update Pivotal Tracker story:', err)
+    .done()
+
+# Handle qa+ label added.
+#
+# Expected: state:started label:reviewed label:qa+
+# Change:   state:finished -label:reviewed -label:qa+
+#           (transition to Tested)
+tryPassTesting = (event) ->
+  # Check the input conditions.
+  story = event.story
+  original_labels = event.original_labels
+  new_labels = event.new_labels
+
+  # The story is started.
+  if story.current_state isnt 'started'
+    return Q()
+  # The reviewed label is and was there.
+  if not (~original_labels.indexOf(reviewedLabel) and ~new_labels.indexOf(reviewedLabel))
+    return Q()
+  # The qa+ label was added.
+  if not (not ~original_labels.indexOf(passedLabel) and ~new_labels.indexOf(passedLabel))
+    return Q()
+
+  return client.updateStory(story.project_id, story.id, {
+    current_state: 'finished'
+    labels: new_labels.filter (label) ->
+      label isnt reviewedLabel and label isnt passedLabel
+  })
+
+# Handle qa- added.
+#
+# Expected: state:started label:reviewed label:qa-
+# Change:   -label:reviewed -label:qa-
+#           (transition to Being Implemented)
+tryFailTesting = (event) ->
+  # Check the input conditions.
+  story = event.story
+  original_labels = event.original_labels
+  new_labels = event.new_labels
+
+  # The story is started.
+  if story.current_state isnt 'started'
+    return Q()
+  # The reviewed label is and was there.
+  if not (~original_labels.indexOf(reviewedLabel) and ~new_labels.indexOf(reviewedLabel))
+    return Q()
+  # The qa- label was added.
+  if not (not ~original_labels.indexOf(failedLabel) and ~new_labels.indexOf(failedLabel))
+    return Q()
+
+  return client.updateStory(story.project_id, story.id, {
+    labels: new_labels.filter (label) ->
+      label isnt reviewedLabel and label isnt failedLabel
+  })
+
 
 module.exports = {
   useClient: useClient
+  getStory: (pid, sid) -> client.getStory(pid, sid)
+  updateStory: (pid, sid, update) -> client.updateStory(pid, sid, update)
   linkReviewRequest: linkReviewRequest
   markReviewAsApproved: markReviewAsApproved
   areAllReviewsApproved: areAllReviewsApproved
   transitionToNextState: transitionToNextState
   discardReviewRequest: discardReviewRequest
+  activity: activity
+  tryPassTesting: tryPassTesting
+  tryFailTesting: tryFailTesting
   id: 'pivotaltracker'
 }

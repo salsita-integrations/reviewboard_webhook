@@ -11,6 +11,10 @@ _ = require('lodash')
 
 config = require('config')
 
+reviewedLabel = config.services.reviewboard.approvedLabel
+passedLabel = config.services.pivotaltracker.testingPassedLabel
+failedLabel = config.services.pivotaltracker.testingFailedLabel
+
 pt = require('./pivotaltracker')
 
 _client = null
@@ -196,7 +200,7 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
           {id: 1}
           {id: 2}
           {id: 3}
-          {name: 'reviewed'}
+          {name: reviewedLabel}
         ]
       }
 
@@ -215,7 +219,7 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
           {id: 1}
           {id: 2}
           {id: 3}
-          {name: 'reviewed'}
+          {name: reviewedLabel}
         ]
       }
 
@@ -276,3 +280,97 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
 
       pt.discardReviewRequest('1/stories/1', '23456').then ->
         _client.updateStory.should.have.been.calledWith(1, 1, update)
+
+
+  describe "tryPassTesting", ->
+
+    it "updates the story when the conditions are met", ->
+      event = {
+        story: {
+          id: 1
+          project_id: 1
+          current_state: 'started'
+        }
+        original_labels: [
+          'foobar', reviewedLabel
+        ]
+        new_labels: [
+          'foobar', reviewedLabel, passedLabel
+        ]
+      }
+
+      update = {
+        current_state: 'finished'
+        labels: ['foobar']
+      }
+
+      _client.updateStory.returns(Q())
+
+      pt.tryPassTesting(event).then ->
+        _client.updateStory.should.have.been.calledWith(1, 1, update)
+
+    it "does not update the story when the conditions are not met", ->
+      event = {
+        story: {
+          id: 1
+          project_id: 1
+          current_state: 'started'
+        }
+        original_labels: [
+          'foobar', reviewedLabel
+        ]
+        new_labels: [
+          'foobar', reviewedLabel, failedLabel
+        ]
+      }
+
+      _client.updateStory.returns(Q())
+
+      pt.tryPassTesting(event).then ->
+        _client.updateStory.should.have.not.been.called
+
+  describe "tryFailTesting", ->
+
+    it "updates the story when the conditions are met", ->
+      event = {
+        story: {
+          id: 1
+          project_id: 1
+          current_state: 'started'
+        }
+        original_labels: [
+          'foobar', reviewedLabel
+        ]
+        new_labels: [
+          'foobar', reviewedLabel, failedLabel
+        ]
+      }
+
+      update = {
+        labels: ['foobar']
+      }
+
+      _client.updateStory.returns(Q())
+
+      pt.tryFailTesting(event).then ->
+        _client.updateStory.should.have.been.calledWith(1, 1, update)
+
+    it "does not update the story when the conditions are not met", ->
+      event = {
+        story: {
+          id: 1
+          project_id: 1
+          current_state: 'started'
+        }
+        original_labels: [
+          'foobar', reviewedLabel
+        ]
+        new_labels: [
+          'foobar', reviewedLabel, passedLabel
+        ]
+      }
+
+      _client.updateStory.returns(Q())
+
+      pt.tryFailTesting(event).then ->
+        _client.updateStory.should.have.not.been.called
