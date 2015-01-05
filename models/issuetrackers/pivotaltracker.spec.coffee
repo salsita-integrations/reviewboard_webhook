@@ -341,7 +341,7 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
 
       update = {
         currentState: 'finished'
-        labels: ['foobar']
+        labels: [{name: 'foobar'}]
       }
 
       _client.updateStory.returns(Q())
@@ -387,7 +387,7 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
       }
 
       update = {
-        labels: ['foobar']
+        labels: [{name: 'foobar'}]
       }
 
       _client.updateStory.returns(Q())
