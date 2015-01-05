@@ -35,7 +35,7 @@ describe "Pivotal Tracker issue tracker", ->
     it "creates the links section in the story description when it is missing", ->
       story = {
         id: 1
-        project_id: 1
+        projectId: 1
         description: 'Just implement this and that.'
       }
 
@@ -58,7 +58,7 @@ review 12345 is pending [link](https://review.salsitasoft.com/r/12345)
     it "adds a new link to the existing links section when a RR is published", ->
       story = {
         id: 1
-        project_id: 1
+        projectId: 1
         description: """
 Just implement this and that.
 
@@ -161,7 +161,7 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
     it "marks a pending review request as approved", ->
       story = {
         id: 1
-        project_id: 1
+        projectId: 1
         description: """
 Just implement this and that.
 
@@ -197,8 +197,8 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
     it "adds the 'reviewed' label for a story that is approved", ->
       story = {
         id: 1
-        project_id: 1
-        current_state: 'started'
+        projectId: 1
+        currentState: 'started'
         labels: [
           {id: 1}
           {id: 2}
@@ -224,8 +224,8 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
     it "drops the 'implemented' label for a story that is approved", ->
       story = {
         id: 1
-        project_id: 1
-        current_state: 'started'
+        projectId: 1
+        currentState: 'started'
         labels: [
           {id: 1}
           {id: 2}
@@ -253,8 +253,8 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
     it "does not add the 'reviewed' label when it is already there", ->
       story = {
         id: 1
-        project_id: 1
-        current_state: 'started'
+        projectId: 1
+        currentState: 'started'
         labels: [
           {id: 1}
           {id: 2}
@@ -272,12 +272,12 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
     it "delivers a story that is finished", ->
       story = {
         id: 1
-        project_id: 1
-        current_state: 'finished'
+        projectId: 1
+        currentState: 'finished'
       }
 
       update = {
-        current_state: 'delivered'
+        currentState: 'delivered'
       }
 
       _client.getStory.returns(Q(story))
@@ -292,7 +292,7 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
     it "removes the link from the story description when found", ->
       story = {
         id: 1
-        project_id: 1
+        projectId: 1
         description: """
 Just implement this and that.
 
@@ -328,8 +328,8 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
       event = {
         story: {
           id: 1
-          project_id: 1
-          current_state: 'started'
+          projectId: 1
+          currentState: 'started'
         }
         original_labels: [
           'foobar', reviewedLabel
@@ -340,7 +340,7 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
       }
 
       update = {
-        current_state: 'finished'
+        currentState: 'finished'
         labels: ['foobar']
       }
 
@@ -353,8 +353,8 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
       event = {
         story: {
           id: 1
-          project_id: 1
-          current_state: 'started'
+          projectId: 1
+          currentState: 'started'
         }
         original_labels: [
           'foobar', reviewedLabel
@@ -375,8 +375,8 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
       event = {
         story: {
           id: 1
-          project_id: 1
-          current_state: 'started'
+          projectId: 1
+          currentState: 'started'
         }
         original_labels: [
           'foobar', reviewedLabel
@@ -399,8 +399,8 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
       event = {
         story: {
           id: 1
-          project_id: 1
-          current_state: 'started'
+          projectId: 1
+          currentState: 'started'
         }
         original_labels: [
           'foobar', reviewedLabel

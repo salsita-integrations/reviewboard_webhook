@@ -25,12 +25,12 @@ useClient = (apiClient) ->
 #
 
 getStory = (pid, sid) ->
-  client = new pt.Client(process.env.PT_TOKEN)
-  Q.nfcall(client.project(pid).story(sid).get)
+  _client = new pt.Client(process.env.PT_TOKEN)
+  Q.ninvoke(_client.project(pid).story(sid), 'get')
 
 updateStory = (pid, sid, story) ->
-  client = new pt.Client(process.env.PT_TOKEN)
-  Q.nfcall(client.project(pid).story(sid).update, story)
+  _client = new pt.Client(process.env.PT_TOKEN)
+  Q.ninvoke(_client.project(pid).story(sid), 'update', story)
 
 defaultClient = {
   getStory: getStory
@@ -63,7 +63,7 @@ linkReviewRequest = (storyIdTag, rrid, _isRequestNew) ->
         lines.push(link(rrid, 'pending'))
         lines.push(linksSeparatorEnd)
 
-        return client.updateStory(story.project_id, story.id, {
+        return client.updateStory(story.projectId, story.id, {
           description: lines.join('\n')
         })
       begin++
@@ -90,7 +90,7 @@ linkReviewRequest = (storyIdTag, rrid, _isRequestNew) ->
       amendedDescription = amendedLines.join('\n')
 
       # Send the update request to Pivotal Tracker.
-      client.updateStory(story.project_id, story.id, {
+      client.updateStory(story.projectId, story.id, {
         description: amendedDescription
       })
 
@@ -128,7 +128,7 @@ markReviewAsApproved = (storyIdTag, rrid) ->
       amendedLines = lines.slice(0, begin).concat(amendedLinks).concat(lines.slice(begin + offset))
       amendedDescription = amendedLines.join('\n')
 
-      client.updateStory(story.project_id, story.id, {
+      client.updateStory(story.projectId, story.id, {
         description: amendedDescription
       })
 
@@ -174,7 +174,7 @@ transitionToNextState = (storyIdTag) ->
   client.getStory(args.pid, args.sid)
     .then (story) ->
       debug('transitionToNextState -> got the story object')
-      switch story.current_state
+      switch story.currentState
         when 'started'
           # This function is only called when the story is fully reviewed.
           # The task here is to drop the 'implemented' label and add 'reviewed'.
@@ -194,9 +194,9 @@ transitionToNextState = (storyIdTag) ->
           labels.push({name: reviewedLabel})
 
           # Update the story.
-          client.updateStory(story.project_id, story.id, {labels: labels})
+          client.updateStory(story.projectId, story.id, {labels: labels})
         when 'finished'
-          client.updateStory(story.project_id, story.id, {current_state: 'delivered'})
+          client.updateStory(story.projectId, story.id, {currentState: 'delivered'})
 
 
 discardReviewRequest = (storyIdTag, rrid) ->
@@ -226,7 +226,7 @@ discardReviewRequest = (storyIdTag, rrid) ->
       amendedLines = lines.slice(0, begin).concat(amendedLinks).concat(lines.slice(begin + offset))
       amendedDescription = amendedLines.join('\n')
 
-      client.updateStory(story.project_id, story.id, {
+      client.updateStory(story.projectId, story.id, {
         description: amendedDescription
       })
 
@@ -268,25 +268,37 @@ activity.on 'labels', (event) ->
 # Change:   state:finished -label:reviewed -label:qa+
 #           (transition to Tested)
 tryPassTesting = (event) ->
+  debug('tryPassTesting')
+
   # Check the input conditions.
   story = event.story
   original_labels = event.original_labels
   new_labels = event.new_labels
 
   # The story is started.
-  if story.current_state isnt 'started'
+  if story.currentState isnt 'started'
+    debug('tryPassTesting -> skip (not started)')
     return Q()
-  # The reviewed label is and was there.
-  if not (~original_labels.indexOf(reviewedLabel) and ~new_labels.indexOf(reviewedLabel))
+  # In case the labels were already there, do nothing.
+  # Something is probably wrong, but we cannot decide clearly what to do.
+  # This probably means that the previous hooks was not processed correctly or something,
+  # because otherwise the labels would be gone already.
+  if ~original_labels.indexOf(reviewedLabel) and ~original_labels.indexOf(passedLabel)
+    debug('tryPassTesting -> skip (labels were already there, oops)')
     return Q()
-  # The qa+ label was added.
-  if not (not ~original_labels.indexOf(passedLabel) and ~new_labels.indexOf(passedLabel))
+  # Finally, check that the labels are there.
+  if not (~new_labels.indexOf(reviewedLabel) and ~new_labels.indexOf(passedLabel))
+    debug('tryPassTesting -> skip (labels are not there yet)')
     return Q()
 
-  return client.updateStory(story.project_id, story.id, {
-    current_state: 'finished'
-    labels: new_labels.filter (label) ->
-      label isnt reviewedLabel and label isnt passedLabel
+  debug('tryPassTesting -> update the story')
+  labels = new_labels.filter (label) ->
+    label isnt reviewedLabel and label isnt passedLabel
+  labels = labels.map (label) ->
+    {name: label}
+  return client.updateStory(story.projectId, story.id, {
+    currentState: 'finished'
+    labels: labels
   })
 
 # Handle qa- added.
@@ -295,25 +307,35 @@ tryPassTesting = (event) ->
 # Change:   -label:reviewed -label:qa-
 #           (transition to Being Implemented)
 tryFailTesting = (event) ->
+  debug('tryFailTesting')
+
   # Check the input conditions.
   story = event.story
   original_labels = event.original_labels
   new_labels = event.new_labels
 
   # The story is started.
-  if story.current_state isnt 'started'
+  if story.currentState isnt 'started'
+    debug('tryFailTesting -> skip (not started)')
     return Q()
-  # The reviewed label is and was there.
-  if not (~original_labels.indexOf(reviewedLabel) and ~new_labels.indexOf(reviewedLabel))
+  # In case the labels were already there, do nothing.
+  # Something is probably wrong, but we cannot decide clearly what to do.
+  # This probably means that the previous hooks was not processed correctly or something,
+  # because otherwise the labels would be gone already.
+  if ~original_labels.indexOf(reviewedLabel) and ~original_labels.indexOf(failedLabel)
+    debug('tryFailTesting -> skip (labels were already there, oops)')
     return Q()
-  # The qa- label was added.
-  if not (not ~original_labels.indexOf(failedLabel) and ~new_labels.indexOf(failedLabel))
+  # Finally, check that the labels are there.
+  if not (~new_labels.indexOf(reviewedLabel) and ~new_labels.indexOf(failedLabel))
+    debug('tryFailTesting -> skip (labels are not there yet)')
     return Q()
 
-  return client.updateStory(story.project_id, story.id, {
-    labels: new_labels.filter (label) ->
-      label isnt reviewedLabel and label isnt failedLabel
-  })
+  debug('tryFailTesting -> update the story')
+  labels = new_labels.filter (label) ->
+    label isnt reviewedLabel and label isnt failedLabel
+  labels = labels.map (label) ->
+    {name: label}
+  return client.updateStory(story.projectId, story.id, {labels: labels})
 
 
 module.exports = {

@@ -5,6 +5,7 @@ EventEmitter = require('events').EventEmitter
 _ = require('lodash')
 Q = require('q')
 debug = require('debug')('reviewboard')
+ptDebug = require('debug')('pivotaltracker')
 config = require('config')
 rb = require('../reviewboard')
 pivotaltracker = require('./../models/issuetrackers/pivotaltracker')
@@ -145,7 +146,7 @@ router.post '/rb/review-request-closed', (req, res) ->
 
 router.post '/pt/activity', (req, res) ->
   # Reply right away, no need to block the request.
-  res.status(202).end()
+  res.send 202
 
   body = req.body
 
@@ -176,11 +177,12 @@ router.post '/pt/activity', (req, res) ->
               return story
 
             .fail (err) ->
-              console.error("Pivotal Tracker activity: failed to get story:", err)
+              console.error("PT activity: failed to get story (pid=#{pid}, sid=#{sid}):", err)
 
         # Once we have the story, we can emit the event.
         promise
           .then (story) ->
+            ptDebug("/pt/activity -> emit 'labels' event")
             pivotaltracker.activity.emit 'labels', {
               story:              story
               original_label_ids: change.original_values.label_ids
@@ -188,6 +190,9 @@ router.post '/pt/activity', (req, res) ->
               new_label_ids:      change.new_values.label_ids
               new_labels:         change.new_values.labels
             }
+
+          .fail (err) ->
+            console.error('PT activity:', err)
 
           .done()
 
