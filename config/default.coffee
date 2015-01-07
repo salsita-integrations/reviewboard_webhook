@@ -26,3 +26,8 @@ module.exports =
       url: "https://#{process.env.RB_DOMAIN}"
       approvedLabel: 'reviewed'
       waitInterval: 5000
+
+    pivotaltracker:
+      implementedLabel: 'implemented'
+      testingPassedLabel: 'qa+'
+      testingFailedLabel: 'qa-'

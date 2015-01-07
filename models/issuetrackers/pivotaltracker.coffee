@@ -1,9 +1,15 @@
 Q = require('q')
+EventEmitter = require('events').EventEmitter
 request = require('request')
 _ = require('lodash')
 debug = require('debug')('pivotaltracker')
 config = require('config')
 pt = require("pivotaltracker")
+
+implementedLabel = config.services.pivotaltracker.implementedLabel
+reviewedLabel = config.services.reviewboard.approvedLabel
+passedLabel = config.services.pivotaltracker.testingPassedLabel
+failedLabel = config.services.pivotaltracker.testingFailedLabel
 
 #
 # The global client implementation that is being used by the functions in this module.
@@ -19,12 +25,12 @@ useClient = (apiClient) ->
 #
 
 getStory = (pid, sid) ->
-  client = new pt.Client(process.env.PT_TOKEN)
-  Q.nfcall(client.project(pid).story(sid).get)
+  _client = new pt.Client(process.env.PT_TOKEN)
+  Q.ninvoke(_client.project(pid).story(sid), 'get')
 
 updateStory = (pid, sid, story) ->
-  client = new pt.Client(process.env.PT_TOKEN)
-  Q.nfcall(client.project(pid).story(sid).update, story)
+  _client = new pt.Client(process.env.PT_TOKEN)
+  Q.ninvoke(_client.project(pid).story(sid), 'update', story)
 
 defaultClient = {
   getStory: getStory
@@ -45,7 +51,8 @@ linkReviewRequest = (storyIdTag, rrid, _isRequestNew) ->
   client.getStory(args.pid, args.sid)
     .then (story) ->
       debug('linkReviewRequest -> got the story object')
-      lines = story.description.split('\n')
+      description = story.description || ''
+      lines = description.split('\n')
 
       begin = lines.indexOf(linksSeparatorBegin)
 
@@ -57,7 +64,7 @@ linkReviewRequest = (storyIdTag, rrid, _isRequestNew) ->
         lines.push(link(rrid, 'pending'))
         lines.push(linksSeparatorEnd)
 
-        return client.updateStory(story.project_id, story.id, {
+        return client.updateStory(story.projectId, story.id, {
           description: lines.join('\n')
         })
       begin++
@@ -84,7 +91,7 @@ linkReviewRequest = (storyIdTag, rrid, _isRequestNew) ->
       amendedDescription = amendedLines.join('\n')
 
       # Send the update request to Pivotal Tracker.
-      client.updateStory(story.project_id, story.id, {
+      client.updateStory(story.projectId, story.id, {
         description: amendedDescription
       })
 
@@ -122,7 +129,7 @@ markReviewAsApproved = (storyIdTag, rrid) ->
       amendedLines = lines.slice(0, begin).concat(amendedLinks).concat(lines.slice(begin + offset))
       amendedDescription = amendedLines.join('\n')
 
-      client.updateStory(story.project_id, story.id, {
+      client.updateStory(story.projectId, story.id, {
         description: amendedDescription
       })
 
@@ -133,8 +140,8 @@ markReviewAsApproved = (storyIdTag, rrid) ->
 # review 10000 is approved
 # review 10001 is pending
 # ----------------------------------------
-linksSeparatorBegin = '----- Review Board Review Requests -----'
-linksSeparatorEnd   = '----------------------------------------'
+linksSeparatorBegin = '+---- Review Board Review Requests ----+'
+linksSeparatorEnd   = '+----------------------------------------------------+'
 
 areAllReviewsApproved = (storyIdTag) ->
   debug('areAllReviewsApproved -> start')
@@ -142,6 +149,12 @@ areAllReviewsApproved = (storyIdTag) ->
   client.getStory(args.pid, args.sid)
     .then (story) ->
       debug('areAllReviewsApproved -> got the story object')
+
+      # The story must be labeled with 'implemented' to ever return true.
+      if not (story.labels.some (label) -> label.name is implementedLabel)
+        debug("areAllReviewApproved -> 'implemented' label missing")
+        return false
+
       lines = story.description.split('\n')
 
       begin = lines.indexOf(linksSeparatorBegin)
@@ -163,18 +176,29 @@ transitionToNextState = (storyIdTag) ->
   client.getStory(args.pid, args.sid)
     .then (story) ->
       debug('transitionToNextState -> got the story object')
-      switch story.current_state
+      switch story.currentState
         when 'started'
-          # Look for the reviewed label. In case it is not there, we add it.
-          # That signals that the story is ready to be tested.
-          alreadyThere = story.labels.some (label) -> label.name is 'reviewed'
+          # This function is only called when the story is fully reviewed.
+          # The task here is to drop the 'implemented' label and add 'reviewed'.
+          # This transitions the story from Implemented to Reviewed.
+
+          # First, make sure the 'reviewed' label is not there yet.
+          # In that case there is nothing to do and we return.
+          alreadyThere = story.labels.some (label) -> label.name is reviewedLabel
           if alreadyThere
             return
-          labels = story.labels.map (label) -> {id: label.id}
-          labels.push({name: 'reviewed'})
-          client.updateStory(story.project_id, story.id, {labels: labels})
+
+          # Drop the 'implemented' label.
+          filteredLabels = story.labels.filter (label) -> label.name isnt implementedLabel
+
+          # Add the 'reviewed' label.
+          labels = filteredLabels.map (label) -> {id: label.id}
+          labels.push({name: reviewedLabel})
+
+          # Update the story.
+          client.updateStory(story.projectId, story.id, {labels: labels})
         when 'finished'
-          client.updateStory(story.project_id, story.id, {current_state: 'delivered'})
+          client.updateStory(story.projectId, story.id, {currentState: 'delivered'})
 
 
 discardReviewRequest = (storyIdTag, rrid) ->
@@ -204,7 +228,7 @@ discardReviewRequest = (storyIdTag, rrid) ->
       amendedLines = lines.slice(0, begin).concat(amendedLinks).concat(lines.slice(begin + offset))
       amendedDescription = amendedLines.join('\n')
 
-      client.updateStory(story.project_id, story.id, {
+      client.updateStory(story.projectId, story.id, {
         description: amendedDescription
       })
 
@@ -220,15 +244,113 @@ parseStoryIdTag = (storyIdTag) ->
 
 
 link = (rrid, state) ->
-  "review #{rrid} is #{state} [link](#{config.services.reviewboard.url}/r/#{rrid})"
+  "review #{rrid} is #{state} ([link](#{config.services.reviewboard.url}/r/#{rrid}))"
+
+##
+## Pivotal Tracker Activity Hooks
+##
+
+activity = new EventEmitter()
+
+activity.on 'labels', (event) ->
+  tryPassTesting event
+    .fail (err) ->
+      console.error('failed to update Pivotal Tracker story:', err)
+    .done()
+
+activity.on 'labels', (event) ->
+  tryFailTesting event
+    .fail (err) ->
+      console.error('failed to update Pivotal Tracker story:', err)
+    .done()
+
+# Handle qa+ label added.
+#
+# Expected: state:started label:reviewed label:qa+
+# Change:   state:finished -label:reviewed -label:qa+
+#           (transition to Tested)
+tryPassTesting = (event) ->
+  debug('tryPassTesting')
+
+  # Check the input conditions.
+  story = event.story
+  original_labels = event.original_labels
+  new_labels = event.new_labels
+
+  # The story is started.
+  if story.currentState isnt 'started'
+    debug('tryPassTesting -> skip (not started)')
+    return Q()
+  # In case the labels were already there, do nothing.
+  # Something is probably wrong, but we cannot decide clearly what to do.
+  # This probably means that the previous hooks was not processed correctly or something,
+  # because otherwise the labels would be gone already.
+  if ~original_labels.indexOf(reviewedLabel) and ~original_labels.indexOf(passedLabel)
+    debug('tryPassTesting -> skip (labels were already there, oops)')
+    return Q()
+  # Finally, check that the labels are there.
+  if not (~new_labels.indexOf(reviewedLabel) and ~new_labels.indexOf(passedLabel))
+    debug('tryPassTesting -> skip (labels are not there yet)')
+    return Q()
+
+  debug('tryPassTesting -> update the story')
+  labels = new_labels.filter (label) ->
+    label isnt reviewedLabel and label isnt passedLabel
+  labels = labels.map (label) ->
+    {name: label}
+  return client.updateStory(story.projectId, story.id, {
+    currentState: 'finished'
+    labels: labels
+  })
+
+# Handle qa- added.
+#
+# Expected: state:started label:reviewed label:qa-
+# Change:   -label:reviewed -label:qa-
+#           (transition to Being Implemented)
+tryFailTesting = (event) ->
+  debug('tryFailTesting')
+
+  # Check the input conditions.
+  story = event.story
+  original_labels = event.original_labels
+  new_labels = event.new_labels
+
+  # The story is started.
+  if story.currentState isnt 'started'
+    debug('tryFailTesting -> skip (not started)')
+    return Q()
+  # In case the labels were already there, do nothing.
+  # Something is probably wrong, but we cannot decide clearly what to do.
+  # This probably means that the previous hooks was not processed correctly or something,
+  # because otherwise the labels would be gone already.
+  if ~original_labels.indexOf(reviewedLabel) and ~original_labels.indexOf(failedLabel)
+    debug('tryFailTesting -> skip (labels were already there, oops)')
+    return Q()
+  # Finally, check that the labels are there.
+  if not (~new_labels.indexOf(reviewedLabel) and ~new_labels.indexOf(failedLabel))
+    debug('tryFailTesting -> skip (labels are not there yet)')
+    return Q()
+
+  debug('tryFailTesting -> update the story')
+  labels = new_labels.filter (label) ->
+    label isnt reviewedLabel and label isnt failedLabel
+  labels = labels.map (label) ->
+    {name: label}
+  return client.updateStory(story.projectId, story.id, {labels: labels})
 
 
 module.exports = {
   useClient: useClient
+  getStory: (pid, sid) -> client.getStory(pid, sid)
+  updateStory: (pid, sid, update) -> client.updateStory(pid, sid, update)
   linkReviewRequest: linkReviewRequest
   markReviewAsApproved: markReviewAsApproved
   areAllReviewsApproved: areAllReviewsApproved
   transitionToNextState: transitionToNextState
   discardReviewRequest: discardReviewRequest
+  activity: activity
+  tryPassTesting: tryPassTesting
+  tryFailTesting: tryFailTesting
   id: 'pivotaltracker'
 }

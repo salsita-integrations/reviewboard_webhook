@@ -1,11 +1,14 @@
 express = require('express')
 router = express.Router()
 request = require('request')
+EventEmitter = require('events').EventEmitter
 _ = require('lodash')
 Q = require('q')
 debug = require('debug')('reviewboard')
+ptDebug = require('debug')('pivotaltracker')
 config = require('config')
 rb = require('../reviewboard')
+pivotaltracker = require('./../models/issuetrackers/pivotaltracker')
 
 issueTrackers = _.zipObject _.map config.trackers, (tracker) ->
   [tracker, require("./../models/issuetrackers/#{tracker}")]
@@ -141,9 +144,59 @@ router.post '/rb/review-request-closed', (req, res) ->
 
     .done()
 
+router.post '/pt/activity', (req, res) ->
+  # Reply right away, no need to block the request.
+  res.send 202
+
+  body = req.body
+
+  # Only process story updates.
+  if body.kind isnt 'story_update_activity'
+    return
+
+  story_cache = {}
+
+  for change in body.changes
+    do (change) ->
+      if change.kind is 'story' and change.new_values.labels?
+        # Fetch the story object so that we can emit it with the event.
+        promise = null
+        pid = body.project.id
+        sid = change.id
+
+        cached_story = story_cache[sid]
+        if cached_story?
+          # The story is in the cache.
+          promise = Q(cached_story)
+        else
+          # Fetch the relevant story.
+          promise = pivotaltracker.getStory(pid, sid)
+            .then (story) ->
+              # Save the story into the cache.
+              story_cache[story.id] = story
+              return story
+
+            .fail (err) ->
+              console.error("PT activity: failed to get story (pid=#{pid}, sid=#{sid}):", err)
+
+        # Once we have the story, we can emit the event.
+        promise
+          .then (story) ->
+            ptDebug("/pt/activity -> emit 'labels' event")
+            pivotaltracker.activity.emit 'labels', {
+              story:              story
+              original_label_ids: change.original_values.label_ids
+              original_labels:    change.original_values.labels
+              new_label_ids:      change.new_values.label_ids
+              new_labels:         change.new_values.labels
+            }
+
+          .fail (err) ->
+            console.error('PT activity:', err)
+
+          .done()
 
 module.exports = {
   router: router
   issueTrackers: issueTrackers
 }
-
