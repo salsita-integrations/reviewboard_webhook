@@ -43,9 +43,9 @@ describe "Pivotal Tracker issue tracker", ->
         description: """
 Just implement this and that.
 
------ Review Board Review Requests -----
-review 12345 is pending [link](https://review.salsitasoft.com/r/12345)
-----------------------------------------
++---- Review Board Review Requests ----+
+review 12345 is pending ([link](https://review.salsitasoft.com/r/12345))
++----------------------------------------------------+
 """
       }
 
@@ -62,11 +62,11 @@ review 12345 is pending [link](https://review.salsitasoft.com/r/12345)
         description: """
 Just implement this and that.
 
------ Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
-review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
-----------------------------------------
++---- Review Board Review Requests ----+
+review 12345 is approved ([link](https://review.salsitasoft.com/r/12345))
+review 23456 is approved ([link](https://review.salsitasoft.com/r/23456))
+review 34567 is approved ([link](https://review.salsitasoft.com/r/34567))
++----------------------------------------------------+
 """
       }
 
@@ -74,12 +74,12 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
         description: """
 Just implement this and that.
 
------ Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
-review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
-review 45678 is pending [link](https://review.salsitasoft.com/r/45678)
-----------------------------------------
++---- Review Board Review Requests ----+
+review 12345 is approved ([link](https://review.salsitasoft.com/r/12345))
+review 23456 is approved ([link](https://review.salsitasoft.com/r/23456))
+review 34567 is approved ([link](https://review.salsitasoft.com/r/34567))
+review 45678 is pending ([link](https://review.salsitasoft.com/r/45678))
++----------------------------------------------------+
 """
       }
 
@@ -94,11 +94,11 @@ review 45678 is pending [link](https://review.salsitasoft.com/r/45678)
         description: """
 Just implement this and that.
 
------ Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
-review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
-----------------------------------------
++---- Review Board Review Requests ----+
+review 12345 is approved ([link](https://review.salsitasoft.com/r/12345))
+review 23456 is approved ([link](https://review.salsitasoft.com/r/23456))
+review 34567 is pending ([link](https://review.salsitasoft.com/r/34567))
++----------------------------------------------------+
 """
       }
 
@@ -113,15 +113,15 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
 
     it "returns true when all linked remote review requests are approved", ->
       story = {
-        labels: [implementedLabel]
+        labels: [{name: implementedLabel}]
         description: """
 Just implement this and that.
 
------ Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
-review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
-----------------------------------------
++---- Review Board Review Requests ----+
+review 12345 is approved ([link](https://review.salsitasoft.com/r/12345))
+review 23456 is approved ([link](https://review.salsitasoft.com/r/23456))
+review 34567 is approved ([link](https://review.salsitasoft.com/r/34567))
++----------------------------------------------------+
 """
       }
 
@@ -131,15 +131,15 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
 
     it "returns false when any linked remote review requests is not approved", ->
       story = {
-        labels: [implementedLabel]
+        labels: [{name: implementedLabel}]
         description: """
 Just implement this and that.
 
------ Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
-review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
-----------------------------------------
++---- Review Board Review Requests ----+
+review 12345 is approved ([link](https://review.salsitasoft.com/r/12345))
+review 23456 is approved ([link](https://review.salsitasoft.com/r/23456))
+review 34567 is pending ([link](https://review.salsitasoft.com/r/34567))
++----------------------------------------------------+
 """
       }
 
@@ -149,7 +149,7 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
 
   it "returns false when the story is not marked as implemented", ->
     story = {
-        labels: ['some random label']
+      labels: [{name: 'some random label'}]
     }
 
     _client.getStory.returns(Q(story))
@@ -165,11 +165,11 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
         description: """
 Just implement this and that.
 
------ Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
-review 23456 is pending [link](https://review.salsitasoft.com/r/23456)
-review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
-----------------------------------------
++---- Review Board Review Requests ----+
+review 12345 is approved ([link](https://review.salsitasoft.com/r/12345))
+review 23456 is pending ([link](https://review.salsitasoft.com/r/23456))
+review 34567 is approved ([link](https://review.salsitasoft.com/r/34567))
++----------------------------------------------------+
 """
       }
 
@@ -177,11 +177,11 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
         description: """
 Just implement this and that.
 
------ Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
-review 23456 is approved [link](https://review.salsitasoft.com/r/23456)
-review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
-----------------------------------------
++---- Review Board Review Requests ----+
+review 12345 is approved ([link](https://review.salsitasoft.com/r/12345))
+review 23456 is approved ([link](https://review.salsitasoft.com/r/23456))
+review 34567 is approved ([link](https://review.salsitasoft.com/r/34567))
++----------------------------------------------------+
 """
       }
 
@@ -296,11 +296,11 @@ review 34567 is approved [link](https://review.salsitasoft.com/r/34567)
         description: """
 Just implement this and that.
 
------ Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
-review 23456 is pending [link](https://review.salsitasoft.com/r/23456)
-review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
-----------------------------------------
++---- Review Board Review Requests ----+
+review 12345 is approved ([link](https://review.salsitasoft.com/r/12345))
+review 23456 is pending ([link](https://review.salsitasoft.com/r/23456))
+review 34567 is pending ([link](https://review.salsitasoft.com/r/34567))
++----------------------------------------------------+
 """
       }
 
@@ -308,10 +308,10 @@ review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
         description: """
 Just implement this and that.
 
------ Review Board Review Requests -----
-review 12345 is approved [link](https://review.salsitasoft.com/r/12345)
-review 34567 is pending [link](https://review.salsitasoft.com/r/34567)
-----------------------------------------
++---- Review Board Review Requests ----+
+review 12345 is approved ([link](https://review.salsitasoft.com/r/12345))
+review 34567 is pending ([link](https://review.salsitasoft.com/r/34567))
++----------------------------------------------------+
 """
       }
 

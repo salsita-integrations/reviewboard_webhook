@@ -51,7 +51,8 @@ linkReviewRequest = (storyIdTag, rrid, _isRequestNew) ->
   client.getStory(args.pid, args.sid)
     .then (story) ->
       debug('linkReviewRequest -> got the story object')
-      lines = story.description.split('\n')
+      description = story.description || ''
+      lines = description.split('\n')
 
       begin = lines.indexOf(linksSeparatorBegin)
 
@@ -139,8 +140,8 @@ markReviewAsApproved = (storyIdTag, rrid) ->
 # review 10000 is approved
 # review 10001 is pending
 # ----------------------------------------
-linksSeparatorBegin = '----- Review Board Review Requests -----'
-linksSeparatorEnd   = '----------------------------------------'
+linksSeparatorBegin = '+---- Review Board Review Requests ----+'
+linksSeparatorEnd   = '+----------------------------------------------------+'
 
 areAllReviewsApproved = (storyIdTag) ->
   debug('areAllReviewsApproved -> start')
@@ -150,7 +151,8 @@ areAllReviewsApproved = (storyIdTag) ->
       debug('areAllReviewsApproved -> got the story object')
 
       # The story must be labeled with 'implemented' to ever return true.
-      if not ~story.labels.indexOf(implementedLabel)
+      if not (story.labels.some (label) -> label.name is implementedLabel)
+        debug("areAllReviewApproved -> 'implemented' label missing")
         return false
 
       lines = story.description.split('\n')
@@ -242,7 +244,7 @@ parseStoryIdTag = (storyIdTag) ->
 
 
 link = (rrid, state) ->
-  "review #{rrid} is #{state} [link](#{config.services.reviewboard.url}/r/#{rrid})"
+  "review #{rrid} is #{state} ([link](#{config.services.reviewboard.url}/r/#{rrid}))"
 
 ##
 ## Pivotal Tracker Activity Hooks
