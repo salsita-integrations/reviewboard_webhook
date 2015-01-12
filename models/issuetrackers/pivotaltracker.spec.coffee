@@ -13,8 +13,10 @@ config = require('config')
 
 implementedLabel = config.services.pivotaltracker.implementedLabel
 reviewedLabel = config.services.reviewboard.approvedLabel
+noReviewLabel = config.services.reviewboard.noReviewLabel
 passedLabel = config.services.pivotaltracker.testingPassedLabel
 failedLabel = config.services.pivotaltracker.testingFailedLabel
+noTestingLabel = config.services.pivotaltracker.noTestingLabel
 
 pt = require('./pivotaltracker')
 
@@ -349,6 +351,56 @@ review 34567 is pending ([link](https://review.salsitasoft.com/r/34567))
       pt.tryPassTesting(event).then ->
         _client.updateStory.should.have.been.calledWith(1, 1, update)
 
+    it "updates the story when the conditions are met (no review)", ->
+      event = {
+        story: {
+          id: 1
+          projectId: 1
+          currentState: 'started'
+        }
+        original_labels: [
+          'foobar', noReviewLabel
+        ]
+        new_labels: [
+          'foobar', noReviewLabel, passedLabel
+        ]
+      }
+
+      update = {
+        currentState: 'finished'
+        labels: [{name: 'foobar'}]
+      }
+
+      _client.updateStory.returns(Q())
+
+      pt.tryPassTesting(event).then ->
+        _client.updateStory.should.have.been.calledWith(1, 1, update)
+
+    it "updates the story when the conditions are met (no qa)", ->
+      event = {
+        story: {
+          id: 1
+          projectId: 1
+          currentState: 'started'
+        }
+        original_labels: [
+          'foobar', noReviewLabel
+        ]
+        new_labels: [
+          'foobar', noReviewLabel, noTestingLabel
+        ]
+      }
+
+      update = {
+        currentState: 'finished'
+        labels: [{name: 'foobar'}]
+      }
+
+      _client.updateStory.returns(Q())
+
+      pt.tryPassTesting(event).then ->
+        _client.updateStory.should.have.been.calledWith(1, 1, update)
+
     it "does not update the story when the conditions are not met", ->
       event = {
         story: {
@@ -383,6 +435,30 @@ review 34567 is pending ([link](https://review.salsitasoft.com/r/34567))
         ]
         new_labels: [
           'foobar', reviewedLabel, failedLabel
+        ]
+      }
+
+      update = {
+        labels: [{name: 'foobar'}]
+      }
+
+      _client.updateStory.returns(Q())
+
+      pt.tryFailTesting(event).then ->
+        _client.updateStory.should.have.been.calledWith(1, 1, update)
+
+  it "updates the story when the conditions are met (no review)", ->
+      event = {
+        story: {
+          id: 1
+          projectId: 1
+          currentState: 'started'
+        }
+        original_labels: [
+          'foobar', noReviewLabel
+        ]
+        new_labels: [
+          'foobar', noReviewLabel, failedLabel
         ]
       }
 

@@ -8,8 +8,14 @@ pt = require("pivotaltracker")
 
 implementedLabel = config.services.pivotaltracker.implementedLabel
 reviewedLabel = config.services.reviewboard.approvedLabel
+noReviewLabel = config.services.reviewboard.noReviewLabel
 passedLabel = config.services.pivotaltracker.testingPassedLabel
 failedLabel = config.services.pivotaltracker.testingFailedLabel
+noTestingLabel = config.services.pivotaltracker.noTestingLabel
+
+isPassedReviewLabel = (label) -> label in [reviewedLabel, noReviewLabel]
+isPassedTestingLabel = (label) -> label in [passedLabel, noTestingLabel]
+isFailedTestingLabel = (label) -> label is failedLabel
 
 #
 # The global client implementation that is being used by the functions in this module.
@@ -277,6 +283,12 @@ tryPassTesting = (event) ->
   original_labels = event.original_labels
   new_labels = event.new_labels
 
+  original_reviewed = original_labels.some isPassedReviewLabel
+  new_reviewed = new_labels.some isPassedReviewLabel
+
+  original_tested = original_labels.some isPassedTestingLabel
+  new_tested = new_labels.some isPassedTestingLabel
+
   # The story is started.
   if story.currentState isnt 'started'
     debug('tryPassTesting -> skip (not started)')
@@ -285,17 +297,17 @@ tryPassTesting = (event) ->
   # Something is probably wrong, but we cannot decide clearly what to do.
   # This probably means that the previous hooks was not processed correctly or something,
   # because otherwise the labels would be gone already.
-  if ~original_labels.indexOf(reviewedLabel) and ~original_labels.indexOf(passedLabel)
+  if original_reviewed and original_tested
     debug('tryPassTesting -> skip (labels were already there, oops)')
     return Q()
   # Finally, check that the labels are there.
-  if not (~new_labels.indexOf(reviewedLabel) and ~new_labels.indexOf(passedLabel))
+  if not (new_reviewed and new_tested)
     debug('tryPassTesting -> skip (labels are not there yet)')
     return Q()
 
   debug('tryPassTesting -> update the story')
   labels = new_labels.filter (label) ->
-    label isnt reviewedLabel and label isnt passedLabel
+    not (isPassedReviewLabel(label) or isPassedTestingLabel(label))
   labels = labels.map (label) ->
     {name: label}
   return client.updateStory(story.projectId, story.id, {
@@ -316,6 +328,12 @@ tryFailTesting = (event) ->
   original_labels = event.original_labels
   new_labels = event.new_labels
 
+  original_reviewed = original_labels.some isPassedReviewLabel
+  new_reviewed = new_labels.some isPassedReviewLabel
+
+  original_failed = original_labels.some isFailedTestingLabel
+  new_failed = new_labels.some isFailedTestingLabel
+
   # The story is started.
   if story.currentState isnt 'started'
     debug('tryFailTesting -> skip (not started)')
@@ -324,17 +342,17 @@ tryFailTesting = (event) ->
   # Something is probably wrong, but we cannot decide clearly what to do.
   # This probably means that the previous hooks was not processed correctly or something,
   # because otherwise the labels would be gone already.
-  if ~original_labels.indexOf(reviewedLabel) and ~original_labels.indexOf(failedLabel)
+  if original_reviewed and original_failed
     debug('tryFailTesting -> skip (labels were already there, oops)')
     return Q()
   # Finally, check that the labels are there.
-  if not (~new_labels.indexOf(reviewedLabel) and ~new_labels.indexOf(failedLabel))
+  if not (new_reviewed and new_failed)
     debug('tryFailTesting -> skip (labels are not there yet)')
     return Q()
 
   debug('tryFailTesting -> update the story')
   labels = new_labels.filter (label) ->
-    label isnt reviewedLabel and label isnt failedLabel
+    not (isPassedReviewLabel(label) or isFailedTestingLabel(label))
   labels = labels.map (label) ->
     {name: label}
   return client.updateStory(story.projectId, story.id, {labels: labels})
