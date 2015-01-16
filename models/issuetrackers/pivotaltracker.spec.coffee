@@ -490,3 +490,50 @@ review 34567 is pending ([link](https://review.salsitasoft.com/r/34567))
 
       pt.tryFailTesting(event).then ->
         _client.updateStory.should.have.not.been.called
+
+  describe "tryAutoFinish", ->
+
+    it "delivers the story when it is labeled with an auto-finish label", ->
+      event = {
+        story: {
+          id: 1
+          projectId: 1
+          currentState: 'started'
+        }
+        original_labels: [
+          'foobar'
+        ]
+        new_labels: [
+          'foobar', 'wontfix'
+        ]
+      }
+
+      update = {
+        currentState: 'delivered'
+        labels: [{name: 'foobar'}]
+      }
+
+      _client.updateStory.returns(Q())
+
+      pt.tryAutoDeliver(event).then ->
+        _client.updateStory.should.have.been.calledWith(1, 1, update)
+
+    it "does not deliver the story when the conditions are not met", ->
+      event = {
+        story: {
+          id: 1
+          projectId: 1
+          currentState: 'started'
+        }
+        original_labels: [
+          'foobar',
+        ]
+        new_labels: [
+          'foobar', 'some-random-label'
+        ]
+      }
+
+      _client.updateStory.returns(Q())
+
+      pt.tryAutoDeliver(event).then ->
+        _client.updateStory.should.have.not.been.called

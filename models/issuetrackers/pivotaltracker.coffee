@@ -12,6 +12,7 @@ noReviewLabel = config.services.reviewboard.noReviewLabel
 passedLabel = config.services.pivotaltracker.testingPassedLabel
 failedLabel = config.services.pivotaltracker.testingFailedLabel
 noTestingLabel = config.services.pivotaltracker.noTestingLabel
+autoDeliverLabels = config.services.pivotaltracker.autoDeliverLabels
 
 isPassedReviewLabel = (label) -> label in [reviewedLabel, noReviewLabel]
 isPassedTestingLabel = (label) -> label in [passedLabel, noTestingLabel]
@@ -270,6 +271,12 @@ activity.on 'labels', (event) ->
       console.error('failed to update Pivotal Tracker story:', err)
     .done()
 
+activity.on 'labels', (event) ->
+  tryAutoDeliver event
+    .fail (err) ->
+      console.error('failed to update Pivotal Tracker story:', err)
+    .done()
+
 # Handle qa+ label added.
 #
 # Expected: state:started label:reviewed label:qa+
@@ -357,6 +364,27 @@ tryFailTesting = (event) ->
     {name: label}
   return client.updateStory(story.projectId, story.id, {labels: labels})
 
+# Handle wontfix, dupe and such.
+#
+# Auto-deliver stories that are labeled with some particular labels.
+tryAutoDeliver = (event) ->
+  debug('tryAutoDeliver')
+
+  isAutoDeliverLabel = (label) -> label in autoDeliverLabels
+  containsLabel = (labels) -> labels.some isAutoDeliverLabel
+
+  # Make sure that a label was added.
+  if not containsLabel(event.new_labels)
+    debug('tryAutoDeliver -> skip (not an auto-deliver label added)')
+    return Q()
+
+  # Drop the auto-finish labels.
+  keep = event.new_labels.filter (label) -> not isAutoDeliverLabel(label)
+  return client.updateStory(event.story.projectId, event.story.id, {
+    currentState: 'delivered'
+    labels: keep.map (label) -> {name: label}
+  })
+
 
 module.exports = {
   useClient: useClient
@@ -370,5 +398,6 @@ module.exports = {
   activity: activity
   tryPassTesting: tryPassTesting
   tryFailTesting: tryFailTesting
+  tryAutoDeliver: tryAutoDeliver
   id: 'pivotaltracker'
 }
