@@ -62,7 +62,7 @@ router.post '/rb/review-published', (req, res) ->
   debug("For story", storyId)
 
   if not storyId
-    console.error "ERROR: Could not determine story id"
+    console.error "ERROR: Could not determine story id for RR:", rr
     return res.send(400)
 
   issueTracker = getIssueTrackerForStory(storyId)
