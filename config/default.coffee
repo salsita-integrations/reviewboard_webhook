@@ -33,3 +33,6 @@ module.exports =
       noTestingLabel: 'no qa'
       testingPassedLabel: 'qa+'
       testingFailedLabel: 'qa-'
+
+    github:
+      reviewIssueLabel: 'review'

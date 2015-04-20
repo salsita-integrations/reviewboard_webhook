@@ -144,6 +144,59 @@ router.post '/rb/review-request-closed', (req, res) ->
 
     .done()
 
+# Handle GitHub review issue events.
+router.post '/github/issues', (req, res) ->
+  issue = req.issue
+
+  # Continue iff this is a review issues event.
+  reviewLabel = config.services.github.reviewLabel
+  isReviewIssue = issue.labels.any (label) -> label.name is reviewLabel
+  if not isReviewRequest
+    res.send 201
+    return
+
+  # Extract the story ID.
+  storyId = github.parseStoryId(issue)
+  debug 'story id to update: ', storyId
+
+  if not storyId?
+    console.error("ERROR: Could not determine story id for GitHub issue: #{issue}")
+    res.send 500
+    return
+
+  issueTracker = getIssueTrackerForStory(storyId)
+
+  # Continue iff the issue is opened, closed or reopened.
+  switch issue.state
+    when 'opened' then handleGitHubIssueOpened(issue, storyId, issueTracker)
+    when 'closed' then handleGitHubIssueClosed(issue, storyId, issueTracker)
+    when 'reopened' then handleGitHubIssueReopened(issue, storyId, issueTracker)
+
+
+handleGitHubIssueOpened = (issue, storyIdTag, issueTracker) ->
+  issueTracker.addComment(storyIdTag, issue.number, issue.html_url, 'Review issue opened.')
+    .then ->
+      console.log("Added comment to #{storyIdTag}: GitHub review issue #{issue.number} opened.")
+
+    .fail (err) ->
+      console.error("Failed add the review comment to story #{storyIdTag}", err)
+
+    .done()
+
+
+handleGitHubIssueClosed = (issue, storyIdTag, issueTracker) ->
+  issueTracker.addComment(storyIdTag, issue.number, issue.html_url, 'Review issue closed.')
+    .then ->
+      console.log("Added comment to #{storyIdTag}: GitHub review issue #{issue.number} closed.")
+
+
+    .fail (err) ->
+      console.error("Failed add the review comment to story #{storyIdTag}", err)
+
+    .done()
+
+
+
 router.post '/pt/activity', (req, res) ->
   # Reply right away, no need to block the request.
   res.send 202
