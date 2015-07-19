@@ -33,3 +33,8 @@ module.exports =
       noTestingLabel: 'no qa'
       testingPassedLabel: 'qa+'
       testingFailedLabel: 'qa-'
+      autoDeliverLabels: do ->
+        if process.env.AUTODELIVER_LABELS?
+          _.compact(process.env.AUTODELIVER_LABELS?.split(','))
+        else
+          ['dupe', 'wontfix']
