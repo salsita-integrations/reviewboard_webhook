@@ -270,7 +270,7 @@ activity.on 'labels', (event) ->
       console.error('failed to update Pivotal Tracker story:', err)
     .done()
 
-# Handle qa+ label added.
+# Handle qa+/no qa label added.
 #
 # Expected: state:started label:reviewed label:qa+
 # Change:   state:finished -label:reviewed -label:qa+
@@ -307,7 +307,7 @@ tryPassTesting = (event) ->
 
   debug('tryPassTesting -> update the story')
   labels = new_labels.filter (label) ->
-    not (isPassedReviewLabel(label) or isPassedTestingLabel(label))
+    not (label in [reviewedLabel, passedLabel])
   labels = labels.map (label) ->
     {name: label}
   return client.updateStory(story.projectId, story.id, {
@@ -352,7 +352,7 @@ tryFailTesting = (event) ->
 
   debug('tryFailTesting -> update the story')
   labels = new_labels.filter (label) ->
-    not (isPassedReviewLabel(label) or isFailedTestingLabel(label))
+    not (label in [reviewedLabel, failedLabel])
   labels = labels.map (label) ->
     {name: label}
   return client.updateStory(story.projectId, story.id, {labels: labels})

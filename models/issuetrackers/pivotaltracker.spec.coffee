@@ -368,7 +368,10 @@ review 34567 is pending ([link](https://review.salsitasoft.com/r/34567))
 
       update = {
         currentState: 'finished'
-        labels: [{name: 'foobar'}]
+        labels: [
+          {name: 'foobar'},
+          {name: noReviewLabel}
+        ]
       }
 
       _client.updateStory.returns(Q())
@@ -393,7 +396,11 @@ review 34567 is pending ([link](https://review.salsitasoft.com/r/34567))
 
       update = {
         currentState: 'finished'
-        labels: [{name: 'foobar'}]
+        labels: [
+          {name: 'foobar'},
+          {name: noReviewLabel},
+          {name: noTestingLabel}
+        ]
       }
 
       _client.updateStory.returns(Q())
@@ -463,7 +470,10 @@ review 34567 is pending ([link](https://review.salsitasoft.com/r/34567))
       }
 
       update = {
-        labels: [{name: 'foobar'}]
+        labels: [
+          {name: 'foobar'},
+          {name: noReviewLabel}
+        ]
       }
 
       _client.updateStory.returns(Q())
