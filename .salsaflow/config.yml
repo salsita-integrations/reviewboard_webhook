@@ -1,8 +1,21 @@
+# This field keeps the timestamp of when 'repo bootstrap' was executed.
+# This timestamp is being used by the pre-push hook to check only the commits
+# that happened after so that it is easier to migrate existing projects to SF.
+# You can modify the timestamp manually in case there is a need.
+salsaflow_enabled_timestamp: "2015-07-29T11:14:12.106159353+02:00"
+
+#  Unless stated otherwise, the keys that are commented out
+#  are required, so please uncomment them and fill in the values.
+
+#-- ISSUE TRACKER
 issue_tracker: "jira"
 jira:
-  server_url: "https://jira.salsitasoft.com"
-  project_key: "SF"
+#  server_url: "https://example.com/jira"
+#  project_key: "EX"
 
-code_review_tool: "review_board"
-review_board:
-  server_url: "https://review.salsitasoft.com"
+#-- CODE REVIEW TOOL
+code_review_tool: "github"
+
+
+#-- RELEASE NOTES MANAGER
+release_notes: "github"
